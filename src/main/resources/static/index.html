@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thinking of You</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Thinking of You</h1>
+            <div id="user-info" class="hidden">
+                <span id="current-username"></span>
+                <button class="secondary-btn" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Login/Register Section -->
+            <section id="auth-section">
+                <div class="card" style="max-width: 400px; margin: 0 auto;">
+                    <h2>Welcome Back</h2>
+                    <p style="color: var(--text-light); margin-bottom: 20px;">Connect with your loved ones.</p>
+                    <input type="text" id="username" placeholder="Username">
+                    <input type="password" id="password" placeholder="Password">
+                    <div class="button-group" style="margin-top: 20px;">
+                        <button style="flex: 2" onclick="login()">Login</button>
+                        <button class="secondary-btn" style="flex: 1" onclick="register()">Register</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="hidden">
+                <div class="dashboard-header">
+                    <h2>My Partners</h2>
+                    <button onclick="showSearch()">Search Partner</button>
+                </div>
+
+                <div id="partners-list" class="partners-grid">
+                    <!-- Partner cards will be injected here -->
+                </div>
+
+                <div id="no-partners" class="hidden">
+                    <p>No partners yet.</p>
+                    <button onclick="showSearch()">Find a partner now!</button>
+                </div>
+
+                <div id="pending-requests" class="hidden">
+                    <h3>Pending Requests</h3>
+                    <div id="requests-list"></div>
+                </div>
+            </section>
+
+            <!-- Search Section -->
+            <section id="search-section" class="hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Search Partner</h2>
+                        <button class="close-btn" onclick="showDashboard()">Back</button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="search-username" placeholder="Exact username">
+                        <button onclick="searchUser()">Search</button>
+                    </div>
+                    <div id="search-result"></div>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section id="stats-section" class="hidden">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h2 id="stats-title">Statistics</h2>
+                        <button class="close-btn" onclick="showDashboard()">Close</button>
+                    </div>
+                    <div class="stats-controls">
+                        <select id="stats-range" onchange="loadStats()">
+                            <option value="1">Last 24 Hours</option>
+                            <option value="7">Last 7 Days</option>
+                            <option value="30">Last 30 Days</option>
+                        </select>
+                        <select id="stats-bucket" onchange="loadStats()">
+                            <option value="60">1 Hour</option>
+                            <option value="360">6 Hours</option>
+                            <option value="1440">1 Day</option>
+                        </select>
+                        <select id="stats-direction" onchange="loadStats()">
+                            <option value="received">Received</option>
+                            <option value="sent">Sent</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="statsChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <div id="toast-container"></div>
+    <script src="js/app.js"></script>
+</body>
+</html>
