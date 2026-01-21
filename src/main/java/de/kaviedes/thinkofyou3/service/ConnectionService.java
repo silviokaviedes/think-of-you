@@ -141,7 +141,15 @@ public class ConnectionService {
         ThoughtEvent event = new ThoughtEvent(c.getId(), user.getId(), recipientId, mood);
         thoughtEventRepository.save(event);
 
-        userRepository.findById(recipientId).ifPresent(r -> notifyUpdate(r.getUsername()));
+        // Send specific notification to receiver
+        userRepository.findById(recipientId).ifPresent(r -> {
+            String moodEmoji = getMoodEmoji(mood);
+            messagingTemplate.convertAndSend("/topic/updates/" + r.getUsername(), 
+                String.format("{\"type\":\"thought\",\"sender\":\"%s\",\"mood\":\"%s\",\"emoji\":\"%s\"}", 
+                    username, mood.getValue(), moodEmoji));
+        });
+        
+        // Send refresh to sender
         notifyUpdate(username);
     }
 
@@ -162,5 +170,19 @@ public class ConnectionService {
 
     private void notifyUpdate(String username) {
         messagingTemplate.convertAndSend("/topic/updates/" + username, "refresh");
+    }
+    
+    private String getMoodEmoji(Mood mood) {
+        switch (mood) {
+            case HAPPY: return "😊";
+            case SAD: return "😢";
+            case ANGRY: return "😠";
+            case LOVE: return "❤️";
+            case EXCITED: return "🤗";
+            case WORRIED: return "😟";
+            case GRATEFUL: return "🙏";
+            case NONE: return "💭";
+            default: return "💭";
+        }
     }
 }

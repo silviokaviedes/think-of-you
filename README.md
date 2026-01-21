@@ -6,6 +6,7 @@ A web application for couples (including polyamorous relationships) to non-verba
 - **User Accounts**: Registration, Login, Logout.
 - **Partner Management**: Search by exact username, send/accept/reject connection requests, multiple partners supported.
 - **Real-time Interaction**: Click a button to send a thought, recipient sees the counter increase in real-time via WebSockets.
+- **Instant Notifications**: Both sender and receiver get immediate notifications when thoughts are sent, including mood context.
 - **Mood Support**: Optionally add a mood (happy, sad, angry, love, excited, worried, grateful, or neutral) to each thought.
 - **Enhanced Statistics**: View click history over time (1, 7, 30 days) with adjustable granularity and mood distribution visualization.
 - **Mood Analytics**: Stacked bar charts showing mood patterns and summary statistics for emotional insights.
@@ -74,12 +75,34 @@ The application now includes comprehensive mood analytics in the statistics dash
 - **Direction**: Filter by sent or received thoughts
 - **Per-Partner View**: Statistics shown for individual connections
 
+## Notification System
+
+The application features a comprehensive notification system for real-time engagement:
+
+### Sender Notifications
+- Immediate confirmation when a thought is sent successfully
+- Displays the selected mood emoji for context
+- Example: "Sent a thought 😊!"
+
+### Receiver Notifications
+- Real-time alerts when someone is thinking of you
+- Shows the sender's username and their mood
+- Example: "John is thinking of you ❤️!"
+- Automatically updates the received counter
+
+### Technical Implementation
+- WebSocket-based instant messaging
+- Separate message types for thoughts vs. system updates
+- Toast-style notifications in the bottom-right corner
+- 3-second auto-dismiss duration
+
 ## Functions and Requirements
 
 ### Core Functions
 - **User Authentication**: Secure registration and login system with JWT tokens
 - **Partner Connections**: Search for users by exact username and send connection requests
-- **Real-time Notifications**: WebSocket-based live updates when someone thinks of you
+- **Real-time Notifications**: WebSocket-based live updates when someone thinks of you, with mood context
+- **Bidirectional Notifications**: Both sender and receiver receive immediate feedback for every interaction
 - **Thought Tracking**: Click counter to track "thinking of you" interactions between partners
 - **Mood Expression**: Add emotional context to thoughts with 8 different mood options
 - **Relationship Analytics**: View statistics of thought exchanges over customizable time periods

@@ -329,9 +329,19 @@ function connectWebSocket() {
     stompClient = Stomp.over(socket);
     stompClient.debug = null;
     stompClient.connect({}, () => {
-        stompClient.subscribe(`/topic/updates/${currentUsername}`, () => {
-            loadPartners();
-            loadRequests();
+        stompClient.subscribe(`/topic/updates/${currentUsername}`, (message) => {
+            const data = message.body;
+            
+            // Check if it's a thought notification
+            if (data.startsWith('{"type":"thought"')) {
+                const thought = JSON.parse(data);
+                showToast(`${thought.sender} is thinking of you ${thought.emoji}!`, 'success');
+                loadPartners(); // Update counters
+            } else {
+                // Regular refresh message
+                loadPartners();
+                loadRequests();
+            }
         });
     });
 }
