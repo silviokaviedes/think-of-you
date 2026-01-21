@@ -13,9 +13,13 @@
     <div id="app">
         <header>
             <h1>Thinking of You</h1>
-            <div id="user-info" class="hidden">
-                <span id="current-username"></span>
-                <button class="secondary-btn" onclick="logout()">Logout</button>
+            <div class="header-nav">
+                <button class="nav-btn" onclick="showDashboard()">Dashboard</button>
+                <button class="nav-btn" onclick="showSearch()">Search Partner</button>
+                <div id="user-info" class="hidden">
+                    <span id="current-username"></span>
+                    <button class="secondary-btn" onclick="logout()">Logout</button>
+                </div>
             </div>
         </header>
 
@@ -36,9 +40,8 @@
 
             <!-- Dashboard Section -->
             <section id="dashboard-section" class="hidden">
-                <div class="dashboard-header">
+                <div class="card">
                     <h2>My Partners</h2>
-                    <button onclick="showSearch()">Search Partner</button>
                 </div>
 
                 <div id="partners-list" class="partners-grid">

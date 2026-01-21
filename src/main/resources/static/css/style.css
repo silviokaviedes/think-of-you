@@ -46,6 +46,30 @@ header {
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
 h1 {
     color: var(--primary);
     font-size: 24px;
@@ -394,7 +418,25 @@ select {
 @media (max-width: 600px) {
     #app { padding: 10px; }
     .partners-grid { grid-template-columns: 1fr; }
-    header { flex-direction: column; gap: 15px; text-align: center; }
+    header { 
+        flex-direction: column; 
+        gap: 15px; 
+        text-align: center; 
+    }
+    .header-nav {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+    .nav-btn {
+        width: 100%;
+    }
+    .nav-btn:first-child {
+        order: -2;
+    }
+    .nav-btn:nth-child(2) {
+        order: -1;
+    }
     .button-group { flex-direction: column; width: 100%; }
     .button-group button { width: 100%; }
 }
