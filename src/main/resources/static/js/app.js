@@ -350,42 +350,150 @@ async function loadStats() {
         const toISO = toDate.toISOString();
         const fromISO = fromDate.toISOString();
 
-        const res = await fetch(`/api/metrics?connectionId=${currentStatsConnectionId}&from=${fromISO}&to=${toISO}&bucketMinutes=${bucket}&direction=${direction}`, {
+        const res = await fetch(`/api/metrics/moods?connectionId=${currentStatsConnectionId}&from=${fromISO}&to=${toISO}&bucketMinutes=${bucket}&direction=${direction}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
         if (loader) loader.remove();
 
-        const labels = Object.keys(data).map(k => {
+        // Prepare labels from time buckets
+        const labels = Object.keys(data.timeBuckets).map(k => {
             const d = new Date(k);
             return days === '1' ? d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : d.toLocaleDateString();
         });
-        const values = Object.values(data);
 
+        // Define mood colors and emojis
+        const moodColors = {
+            'happy': '#FFD700',
+            'sad': '#4169E1',
+            'angry': '#FF4500',
+            'love': '#FF69B4',
+            'excited': '#FFA500',
+            'worried': '#9370DB',
+            'grateful': '#32CD32',
+            'none': '#808080'
+        };
+
+        const moodEmojis = {
+            'happy': '😊',
+            'sad': '😢',
+            'angry': '😠',
+            'love': '❤️',
+            'excited': '🤗',
+            'worried': '😟',
+            'grateful': '🙏',
+            'none': '💭'
+        };
+
+        // Prepare datasets for each mood
+        const datasets = [];
+        const moods = ['happy', 'sad', 'angry', 'love', 'excited', 'worried', 'grateful', 'none'];
+        
+        moods.forEach(mood => {
+            const values = Object.values(data.timeBuckets).map(bucket => {
+                // Access the mood count using the lowercase key
+                return bucket[mood] || 0;
+            });
+            datasets.push({
+                label: `${moodEmojis[mood]} ${mood.charAt(0).toUpperCase() + mood.slice(1)}`,
+                data: values,
+                backgroundColor: moodColors[mood],
+                borderRadius: 2
+            });
+        });
+        
         if (chart) chart.destroy();
         const ctx = document.getElementById('statsChart').getContext('2d');
         chart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: `Clicks (${direction})`,
-                    data: values,
-                    backgroundColor: '#ff4b5c',
-                    borderRadius: 5
-                }]
+                datasets: datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    x: { stacked: true },
+                    y: { 
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y;
+                            }
+                        }
+                    }
                 }
             }
         });
+
+        // Display mood distribution summary
+        displayMoodSummary(data.totalMoodDistribution, moodEmojis);
     } catch (e) {
         console.error(e);
         if (loader) loader.remove();
         showToast('Failed to load statistics', 'error');
     }
+}
+
+function displayMoodSummary(totalMoodDistribution, moodEmojis) {
+    // Remove existing summary if present
+    const existingSummary = document.getElementById('mood-summary');
+    if (existingSummary) {
+        existingSummary.remove();
+    }
+
+    // Create mood summary container
+    const summaryContainer = document.createElement('div');
+    summaryContainer.id = 'mood-summary';
+
+    const title = document.createElement('h3');
+    title.textContent = 'Mood Distribution Summary';
+    summaryContainer.appendChild(title);
+
+    const moodGrid = document.createElement('div');
+    moodGrid.className = 'mood-grid';
+
+    // Sort moods by count (descending)
+    const sortedMoods = Object.entries(totalMoodDistribution)
+        .filter(([mood, count]) => count > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+    if (sortedMoods.length === 0) {
+        moodGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666;">No mood data available</p>';
+    } else {
+        sortedMoods.forEach(([mood, count]) => {
+            const moodItem = document.createElement('div');
+            moodItem.className = 'mood-item';
+            
+            const emoji = document.createElement('div');
+            emoji.className = 'mood-emoji';
+            emoji.textContent = moodEmojis[mood.toLowerCase()] || '❓';
+            
+            const name = document.createElement('div');
+            name.className = 'mood-name';
+            name.textContent = mood.charAt(0).toUpperCase() + mood.slice(1).toLowerCase();
+            
+            const countDiv = document.createElement('div');
+            countDiv.className = 'mood-count';
+            countDiv.textContent = count;
+            
+            moodItem.appendChild(emoji);
+            moodItem.appendChild(name);
+            moodItem.appendChild(countDiv);
+            moodGrid.appendChild(moodItem);
+        });
+    }
+
+    summaryContainer.appendChild(moodGrid);
+
+    // Insert summary after the chart container
+    const chartContainer = document.querySelector('.chart-container');
+    chartContainer.parentNode.insertBefore(summaryContainer, chartContainer.nextSibling);
 }
