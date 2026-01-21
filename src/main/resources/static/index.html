@@ -13,14 +13,19 @@
     <div id="app">
         <header>
             <h1>Thinking of You</h1>
-            <div class="header-nav">
+            <button class="burger-menu" onclick="toggleMenu()" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <nav class="header-nav" id="header-nav">
                 <button class="nav-btn" onclick="showDashboard()">Dashboard</button>
                 <button class="nav-btn" onclick="showSearch()">Search Partner</button>
                 <div id="user-info" class="hidden">
                     <span id="current-username"></span>
                     <button class="secondary-btn" onclick="logout()">Logout</button>
                 </div>
-            </div>
+            </nav>
         </header>
 
         <main>

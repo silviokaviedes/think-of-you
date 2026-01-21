@@ -29,6 +29,14 @@ function showToast(message, type = 'info') {
     return toast;
 }
 
+function toggleMenu() {
+    const burgerMenu = document.querySelector('.burger-menu');
+    const headerNav = document.getElementById('header-nav');
+    
+    burgerMenu.classList.toggle('active');
+    headerNav.classList.toggle('active');
+}
+
 // UI Navigation
 function setLoading(loading) {
     const btns = document.querySelectorAll('button');
