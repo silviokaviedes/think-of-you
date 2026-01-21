@@ -3,6 +3,7 @@ let currentUsername = localStorage.getItem('username');
 let stompClient = null;
 let currentStatsConnectionId = null;
 let chart = null;
+let selectedMoods = {};
 
 // Initialization
 if (token) {
@@ -136,6 +137,7 @@ async function loadPartners() {
         headers: { 'Authorization': `Bearer ${token}` }
     });
     const partners = await res.json();
+    console.log('Loaded partners:', partners); // Debug log
     const list = document.getElementById('partners-list');
     list.innerHTML = '';
     
@@ -144,6 +146,7 @@ async function loadPartners() {
     } else {
         document.getElementById('no-partners').classList.add('hidden');
         partners.forEach(p => {
+            console.log(`Partner ${p.partnerUsername} last mood:`, p.lastReceivedMood); // Debug log
             const card = document.createElement('div');
             card.className = 'partner-card';
             card.innerHTML = `
@@ -152,10 +155,24 @@ async function loadPartners() {
                     <div class="stat-item">
                         <span class="stat-label">Received</span>
                         <span class="stat-value" id="received-${p.id}">${p.receivedClicks}</span>
+                        ${p.lastReceivedMood && p.lastReceivedMood !== 'none' && p.lastReceivedMood !== 'NONE' ? `<span class="last-mood">${getMoodEmoji(p.lastReceivedMood)}</span>` : ''}
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Sent</span>
                         <span class="stat-value" id="sent-${p.id}">${p.sentClicks}</span>
+                    </div>
+                </div>
+                <div class="mood-selector" id="mood-selector-${p.id}">
+                    <label class="mood-label">How are you feeling?</label>
+                    <div class="mood-options">
+                        <button class="mood-btn" data-mood="happy" data-connection="${p.id}" onclick="selectMood('happy', '${p.id}')">😊 Happy</button>
+                        <button class="mood-btn" data-mood="love" data-connection="${p.id}" onclick="selectMood('love', '${p.id}')">❤️ Love</button>
+                        <button class="mood-btn" data-mood="sad" data-connection="${p.id}" onclick="selectMood('sad', '${p.id}')">😢 Sad</button>
+                        <button class="mood-btn" data-mood="angry" data-connection="${p.id}" onclick="selectMood('angry', '${p.id}')">😠 Angry</button>
+                        <button class="mood-btn" data-mood="excited" data-connection="${p.id}" onclick="selectMood('excited', '${p.id}')">🤗 Excited</button>
+                        <button class="mood-btn" data-mood="worried" data-connection="${p.id}" onclick="selectMood('worried', '${p.id}')">😟 Worried</button>
+                        <button class="mood-btn" data-mood="grateful" data-connection="${p.id}" onclick="selectMood('grateful', '${p.id}')">🙏 Grateful</button>
+                        <button class="mood-btn selected" data-mood="none" data-connection="${p.id}" onclick="selectMood('none', '${p.id}')">💭 Neutral</button>
                     </div>
                 </div>
                 <button class="think-btn" onclick="think('${p.id}', this)">I'm thinking of you!</button>
@@ -260,14 +277,49 @@ async function think(id, btn) {
     btn.classList.add('pulse');
     setTimeout(() => btn.classList.remove('pulse'), 300);
     
+    const mood = selectedMoods[id] || 'none';
+    
     await fetch(`/api/connections/${id}/think`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ mood })
     });
     // Update local counter immediately for better UX
     const val = document.getElementById(`sent-${id}`);
     val.innerText = parseInt(val.innerText) + 1;
-    showToast('Sent a thought!', 'success');
+    const moodEmoji = document.querySelector(`#mood-selector-${id} .mood-btn.selected`).textContent.split(' ')[0];
+    showToast(`Sent a thought ${moodEmoji}!`, 'success');
+}
+
+function selectMood(mood, connectionId) {
+    selectedMoods[connectionId] = mood;
+    
+    // Update UI
+    const buttons = document.querySelectorAll(`#mood-selector-${connectionId} .mood-btn`);
+    buttons.forEach(btn => {
+        if (btn.dataset.mood === mood) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+}
+
+function getMoodEmoji(mood) {
+    const moodEmojis = {
+        'happy': '😊',
+        'love': '❤️',
+        'sad': '😢',
+        'angry': '😠',
+        'excited': '🤗',
+        'worried': '😟',
+        'grateful': '🙏',
+        'none': '💭'
+    };
+    return moodEmojis[mood] || '💭';
 }
 
 // WebSocket
@@ -306,7 +358,7 @@ async function loadStats() {
 
         const labels = Object.keys(data).map(k => {
             const d = new Date(k);
-            return days == 1 ? d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : d.toLocaleDateString();
+            return days === '1' ? d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : d.toLocaleDateString();
         });
         const values = Object.values(data);
 

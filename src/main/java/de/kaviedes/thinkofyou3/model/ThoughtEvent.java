@@ -11,14 +11,20 @@ public class ThoughtEvent {
     private String connectionId;
     private String senderId;
     private String recipientId;
+    private Mood mood;
     private Instant occurredAt;
 
     public ThoughtEvent() {}
 
     public ThoughtEvent(String connectionId, String senderId, String recipientId) {
+        this(connectionId, senderId, recipientId, Mood.NONE);
+    }
+
+    public ThoughtEvent(String connectionId, String senderId, String recipientId, Mood mood) {
         this.connectionId = connectionId;
         this.senderId = senderId;
         this.recipientId = recipientId;
+        this.mood = mood;
         this.occurredAt = Instant.now();
     }
 
@@ -32,4 +38,6 @@ public class ThoughtEvent {
     public void setRecipientId(String recipientId) { this.recipientId = recipientId; }
     public Instant getOccurredAt() { return occurredAt; }
     public void setOccurredAt(Instant occurredAt) { this.occurredAt = occurredAt; }
+    public Mood getMood() { return mood; }
+    public void setMood(Mood mood) { this.mood = mood; }
 }

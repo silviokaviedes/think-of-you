@@ -1,6 +1,7 @@
 package de.kaviedes.thinkofyou3.controller;
 
 import de.kaviedes.thinkofyou3.dto.ConnectionDTO;
+import de.kaviedes.thinkofyou3.dto.ThinkRequest;
 import de.kaviedes.thinkofyou3.service.ConnectionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -47,8 +48,8 @@ public class ConnectionController {
     }
 
     @PostMapping("/{id}/think")
-    public ResponseEntity<?> think(@PathVariable String id, Authentication auth) {
-        connectionService.thinkOfPartner(id, auth.getName());
+    public ResponseEntity<?> think(@PathVariable String id, @RequestBody ThinkRequest request, Authentication auth) {
+        connectionService.thinkOfPartner(id, auth.getName(), request.getMood());
         return ResponseEntity.ok().build();
     }
 

@@ -2,6 +2,7 @@ package de.kaviedes.thinkofyou3.service;
 
 import de.kaviedes.thinkofyou3.dto.ConnectionDTO;
 import de.kaviedes.thinkofyou3.model.Connection;
+import de.kaviedes.thinkofyou3.model.Mood;
 import de.kaviedes.thinkofyou3.model.ThoughtEvent;
 import de.kaviedes.thinkofyou3.model.User;
 import de.kaviedes.thinkofyou3.repository.ConnectionRepository;
@@ -11,7 +12,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -108,16 +108,22 @@ public class ConnectionService {
             throw new RuntimeException("Unauthorized");
 
         connectionRepository.delete(c);
-        
+
         String partnerId = c.getRequesterId().equals(user.getId()) ? c.getRecipientId() : c.getRequesterId();
         userRepository.findById(partnerId).ifPresent(p -> notifyUpdate(p.getUsername()));
         notifyUpdate(username);
     }
 
     public void thinkOfPartner(String id, String username) {
+        thinkOfPartner(id, username, null);
+    }
+
+    public void thinkOfPartner(String id, String username, String moodValue) {
         Connection c = connectionRepository.findById(id).orElseThrow();
         User user = userRepository.findByUsername(username).orElseThrow();
         if (c.getStatus() != Connection.Status.ACCEPTED) throw new RuntimeException("Connection not accepted");
+
+        Mood mood = moodValue != null ? Mood.fromValue(moodValue) : Mood.NONE;
 
         String recipientId;
         if (c.getRequesterId().equals(user.getId())) {
@@ -132,7 +138,7 @@ public class ConnectionService {
         c.setUpdatedAt(Instant.now());
         connectionRepository.save(c);
 
-        ThoughtEvent event = new ThoughtEvent(c.getId(), user.getId(), recipientId);
+        ThoughtEvent event = new ThoughtEvent(c.getId(), user.getId(), recipientId, mood);
         thoughtEventRepository.save(event);
 
         userRepository.findById(recipientId).ifPresent(r -> notifyUpdate(r.getUsername()));
@@ -144,7 +150,14 @@ public class ConnectionService {
         User partner = userRepository.findById(partnerId).orElseThrow();
         int sent = c.getRequesterId().equals(userId) ? c.getRequesterToRecipientCount() : c.getRecipientToRequesterCount();
         int received = c.getRequesterId().equals(userId) ? c.getRecipientToRequesterCount() : c.getRequesterToRecipientCount();
-        return new ConnectionDTO(c.getId(), partner.getUsername(), received, sent, c.getStatus());
+
+        // Find the last received mood
+        Mood lastReceivedMood = thoughtEventRepository
+                .findFirstByConnectionIdAndRecipientIdOrderByOccurredAtDesc(c.getId(), userId)
+                .map(event -> event.getMood() != null ? event.getMood() : Mood.NONE)
+                .orElse(null);
+
+        return new ConnectionDTO(c.getId(), partner.getUsername(), received, sent, c.getStatus(), lastReceivedMood);
     }
 
     private void notifyUpdate(String username) {
