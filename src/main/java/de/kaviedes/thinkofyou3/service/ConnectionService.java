@@ -64,6 +64,18 @@ public class ConnectionService {
                 .collect(Collectors.toList());
     }
 
+    public List<ConnectionDTO> getSentRequests(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return connectionRepository.findByRequesterIdAndStatus(user.getId(), Connection.Status.PENDING)
+                .stream()
+                .map(c -> {
+                    User recipient = userRepository.findById(c.getRecipientId()).orElseThrow();
+                    return new ConnectionDTO(c.getId(), recipient.getUsername(), 0, 0, c.getStatus());
+                })
+                .collect(Collectors.toList());
+    }
+
     public List<ConnectionDTO> getAcceptedConnections(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -98,6 +110,19 @@ public class ConnectionService {
 
         User requester = userRepository.findById(c.getRequesterId()).orElseThrow();
         notifyUpdate(requester.getUsername());
+        notifyUpdate(username);
+    }
+
+    public void cancelConnection(String id, String username) {
+        Connection c = connectionRepository.findById(id).orElseThrow();
+        User user = userRepository.findByUsername(username).orElseThrow();
+        if (!c.getRequesterId().equals(user.getId())) throw new RuntimeException("Unauthorized");
+        if (c.getStatus() != Connection.Status.PENDING) throw new RuntimeException("Cannot cancel non-pending request");
+
+        connectionRepository.delete(c);
+
+        User recipient = userRepository.findById(c.getRecipientId()).orElseThrow();
+        notifyUpdate(recipient.getUsername());
         notifyUpdate(username);
     }
 

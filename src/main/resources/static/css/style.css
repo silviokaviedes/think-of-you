@@ -3,6 +3,7 @@
     --primary-light: #ff7684;
     --primary-dark: #e63e4d;
     --secondary: #4b5cff;
+    --accent: #ff6b35;
     --bg: #f0f2f5;
     --card-bg: #ffffff;
     --text: #1c1e21;
@@ -46,6 +47,41 @@ header {
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     position: relative;
     z-index: 999;
+}
+
+.notification-icon-mobile {
+    display: none;
+    width: 32px;
+    height: 32px;
+    background-color: var(--accent);
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: glow 2s ease-in-out infinite;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.notification-icon-mobile svg {
+    width: 20px;
+    height: 20px;
+    fill: white;
+}
+
+.notification-icon-mobile:hover {
+    transform: scale(1.1);
+    background-color: var(--primary);
+}
+
+@keyframes glow {
+    0%, 100% { 
+        box-shadow: 0 0 5px rgba(255, 107, 53, 0.5);
+    }
+    50% { 
+        box-shadow: 0 0 20px rgba(255, 107, 53, 0.8);
+    }
 }
 
 /* Burger Menu */
@@ -107,6 +143,42 @@ header {
     background-color: var(--primary-dark);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.nav-btn.has-pending {
+    background-color: var(--accent);
+    animation: pulse 2s infinite;
+    position: relative;
+}
+
+.nav-btn .indicator-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background-color: #ff4b5c;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 5px;
+    border: 2px solid white;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@media (max-width: 768px) {
+    .nav-btn .indicator-icon {
+        width: 18px;
+        height: 18px;
+        font-size: 11px;
+        margin-left: 4px;
+    }
 }
 
 h1 {
@@ -454,6 +526,9 @@ select {
     animation: pulse 0.3s ease-in-out;
 }
 
+@media (max-width: 1024px) and (min-width: 769px) {
+}
+
 @media (max-width: 768px) {
     #app { 
         padding: 10px; 
@@ -470,6 +545,17 @@ select {
     
     h1 {
         font-size: 20px;
+    }
+    
+    .notification-icon-mobile {
+        display: none;
+        width: 28px;
+        height: 28px;
+    }
+    
+    .notification-icon-mobile svg {
+        width: 18px;
+        height: 18px;
     }
     
     .burger-menu {

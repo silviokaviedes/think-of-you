@@ -9,6 +9,8 @@ let selectedMoods = {};
 if (token) {
     showDashboard();
     connectWebSocket();
+} else {
+    showAuth();
 }
 
 // UI Helpers
@@ -51,6 +53,18 @@ function setLoading(loading) {
     });
 }
 
+function showAuth() {
+    document.getElementById('auth-section').classList.remove('hidden');
+    document.getElementById('dashboard-section').classList.add('hidden');
+    document.getElementById('search-section').classList.add('hidden');
+    document.getElementById('stats-section').classList.add('hidden');
+    document.getElementById('user-info').classList.add('hidden');
+    // Hide navigation elements when not logged in
+    document.querySelector('.header-nav').style.display = 'none';
+    document.getElementById('notification-icon-mobile').style.display = 'none';
+    document.querySelector('.burger-menu').classList.add('hidden');
+}
+
 function showDashboard() {
     document.getElementById('auth-section').classList.add('hidden');
     document.getElementById('dashboard-section').classList.remove('hidden');
@@ -58,6 +72,11 @@ function showDashboard() {
     document.getElementById('stats-section').classList.add('hidden');
     document.getElementById('user-info').classList.remove('hidden');
     document.getElementById('current-username').innerText = currentUsername;
+    // Show navigation elements when logged in
+    document.querySelector('.header-nav').style.display = 'flex';
+    document.querySelector('.burger-menu').classList.remove('hidden');
+    // Reset mobile notification icon to hidden state (will be shown by loadRequests if needed)
+    document.getElementById('notification-icon-mobile').style.display = 'none';
     loadPartners();
     loadRequests();
 }
@@ -201,10 +220,31 @@ async function loadRequests() {
     const requests = await res.json();
     const section = document.getElementById('pending-requests');
     const list = document.getElementById('requests-list');
+    const notificationIconMobile = document.getElementById('notification-icon-mobile');
     list.innerHTML = '';
 
+    // Update dashboard button indicator
+    const dashboardBtn = document.querySelector('button[onclick="showDashboard()"]');
+    const burgerBtn = document.querySelector('.burger-menu');
+    
     if (requests.length > 0) {
         section.classList.remove('hidden');
+        dashboardBtn.innerHTML = 'Dashboard <span class="indicator-icon">!</span>';
+        dashboardBtn.classList.add('has-pending');
+        
+        // Show mobile notification icon
+        notificationIconMobile.classList.remove('hidden');
+        notificationIconMobile.style.display = 'flex';
+        
+        // Add indicator to burger menu
+        burgerBtn.classList.add('has-pending');
+        if (!burgerBtn.querySelector('.burger-indicator')) {
+            const indicator = document.createElement('span');
+            indicator.className = 'indicator-icon burger-indicator';
+            indicator.textContent = '!';
+            burgerBtn.appendChild(indicator);
+        }
+        
         requests.forEach(r => {
             const item = document.createElement('div');
             item.className = 'request-item';
@@ -219,6 +259,42 @@ async function loadRequests() {
         });
     } else {
         section.classList.add('hidden');
+        dashboardBtn.innerHTML = 'Dashboard';
+        dashboardBtn.classList.remove('has-pending');
+        
+        // Hide mobile notification icon
+        notificationIconMobile.classList.add('hidden');
+        notificationIconMobile.style.display = 'none';
+        
+        burgerBtn.classList.remove('has-pending');
+        const burgerIndicator = burgerBtn.querySelector('.burger-indicator');
+        if (burgerIndicator) burgerIndicator.remove();
+    }
+
+    // Load sent requests
+    const sentRes = await fetch('/api/connections/sent', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const sentRequests = await sentRes.json();
+    const sentSection = document.getElementById('sent-requests');
+    const sentList = document.getElementById('sent-requests-list');
+    sentList.innerHTML = '';
+
+    if (sentRequests.length > 0) {
+        sentSection.classList.remove('hidden');
+        sentRequests.forEach(r => {
+            const item = document.createElement('div');
+            item.className = 'request-item';
+            item.innerHTML = `
+                <span>Request sent to ${r.partnerUsername}</span>
+                <div class="button-group">
+                    <button class="danger-btn" onclick="cancelRequest('${r.id}')">Cancel</button>
+                </div>
+            `;
+            sentList.appendChild(item);
+        });
+    } else {
+        sentSection.classList.add('hidden');
     }
 }
 
@@ -252,6 +328,7 @@ async function sendRequest(username) {
     });
     showToast(`Request sent to ${username}!`, 'success');
     showDashboard();
+    loadRequests();
 }
 
 async function acceptRequest(id) {
@@ -260,6 +337,7 @@ async function acceptRequest(id) {
         headers: { 'Authorization': `Bearer ${token}` }
     });
     loadDashboard();
+    loadRequests();
 }
 
 async function rejectRequest(id) {
@@ -267,6 +345,15 @@ async function rejectRequest(id) {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
     });
+    loadRequests();
+}
+
+async function cancelRequest(id) {
+    await fetch(`/api/connections/${id}/cancel`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    showToast('Request cancelled.', 'info');
     loadRequests();
 }
 

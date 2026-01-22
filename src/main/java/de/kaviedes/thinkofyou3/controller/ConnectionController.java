@@ -35,6 +35,11 @@ public class ConnectionController {
         return ResponseEntity.ok(connectionService.getPendingRequests(auth.getName()));
     }
 
+    @GetMapping("/sent")
+    public ResponseEntity<List<ConnectionDTO>> getSentRequests(Authentication auth) {
+        return ResponseEntity.ok(connectionService.getSentRequests(auth.getName()));
+    }
+
     @PostMapping("/{id}/accept")
     public ResponseEntity<?> accept(@PathVariable String id, Authentication auth) {
         connectionService.acceptConnection(id, auth.getName());
@@ -44,6 +49,12 @@ public class ConnectionController {
     @PostMapping("/{id}/reject")
     public ResponseEntity<?> reject(@PathVariable String id, Authentication auth) {
         connectionService.rejectConnection(id, auth.getName());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<?> cancel(@PathVariable String id, Authentication auth) {
+        connectionService.cancelConnection(id, auth.getName());
         return ResponseEntity.ok().build();
     }
 
