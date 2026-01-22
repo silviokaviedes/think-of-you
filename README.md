@@ -14,11 +14,67 @@ A web application for couples (including polyamorous relationships) to non-verba
 
 ## Architecture
 - **Backend**: Spring Boot (Java 21), Spring Security (JWT), Spring Data MongoDB, Spring WebSocket.
-- **Frontend**: Vanilla JS, CSS3, HTML5, Chart.js, SockJS, Stomp.
+- **Frontend**: Vue 3 + TypeScript (Vite), Chart.js, SockJS, STOMP.
 - **Database**: MongoDB.
 
-## Getting Started
+## Quick Start (Docker Compose)
 
+The easiest way to run the application locally is with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+That's it! The application will be available at `http://localhost:8080`.
+
+Docker Compose will automatically:
+- Build and start the Spring Boot application
+- Start a MongoDB database
+- Connect the application to the database
+- Handle all networking and data persistence
+
+### Stopping the Application
+```bash
+docker compose down
+```
+
+### Development with Docker Compose
+For development with hot reload:
+```bash
+docker compose up --build --watch
+```
+
+## Alternative: Manual Local Setup
+
+If you prefer to run everything locally without Docker:
+
+### Prerequisites
+- Java 21
+- MongoDB running locally
+
+### Steps
+1. **Start MongoDB** (if not already running):
+   ```bash
+   docker run -d -p 27017:27017 --name mongodb mongo:latest
+   ```
+
+2. **Run the Spring Boot application**:
+   ```bash
+   # Unix/Linux/MacOS
+   ./gradlew bootRun
+   
+   # Windows
+   gradlew.bat bootRun
+   ```
+
+3. **Access the application**:
+   Open `http://localhost:8080` in your browser
+
+### Development Notes
+- The Vue frontend uses Vite for hot reload and proxies API/WebSocket traffic
+- Backend changes require a restart of the Spring Boot application
+- Default MongoDB connection is to `localhost:27017`
+- JWT tokens are stored in localStorage for development
 ### Prerequisites
 - Java 21
 - MongoDB
@@ -58,10 +114,27 @@ For local development without Docker:
    Open your browser and navigate to `http://localhost:8080`
 
 #### Development Notes
-- The application uses hot reload for frontend changes (HTML/CSS/JS)
+- The Vue frontend uses Vite for hot reload and proxies API/WebSocket traffic
 - Backend changes require a restart of the Spring Boot application
 - Default MongoDB connection is to `localhost:27017`
 - JWT tokens are stored in localStorage for development
+
+### Frontend (Vue 3 + TypeScript)
+The frontend source lives in `frontend/` and is built into `src/main/resources/static`.
+
+#### Run frontend dev server (with backend running)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+#### Build frontend for Spring Boot
+```bash
+cd frontend
+npm install
+npm run build
+```
 
 ## Deployment
 For instructions on how to deploy this application to production easily, see the [Deployment Guide](DEPLOYMENT.md).
