@@ -1,7 +1,10 @@
 <template>
   <div id="app">
-    <header>
-      <h1>Thinking of You</h1>
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark">💭</span>
+        <h1>Thinking of You</h1>
+      </div>
       <div
         id="notification-icon-mobile"
         class="notification-icon-mobile"
@@ -28,15 +31,6 @@
         <span v-if="hasPendingRequests" class="indicator-icon burger-indicator">!</span>
       </button>
       <nav v-if="isAuthenticated" class="header-nav" :class="{ active: isMenuOpen }" id="header-nav">
-        <button
-          class="nav-btn"
-          :class="{ 'has-pending': hasPendingRequests }"
-          @click="showDashboard"
-        >
-          Dashboard
-          <span v-if="hasPendingRequests" class="indicator-icon">!</span>
-        </button>
-        <button class="nav-btn" @click="showSearch">Search Partner</button>
         <div id="user-info" :class="{ hidden: !isAuthenticated }">
           <span id="current-username">{{ currentUsername }}</span>
           <button class="secondary-btn" @click="logout">Logout</button>
@@ -60,7 +54,7 @@
 
       <section id="dashboard-section" v-if="currentView === 'dashboard'">
         <div class="card">
-          <h2>My Partners</h2>
+          <h2>My People</h2>
         </div>
 
         <div id="partners-list" class="partners-grid">
@@ -105,11 +99,11 @@
 
         <div id="no-partners" :class="{ hidden: partners.length !== 0 }">
           <p>No partners yet.</p>
-          <button @click="showSearch">Find a partner now!</button>
+          <button @click="showSearch">Find someone</button>
         </div>
 
         <div id="pending-requests" :class="{ hidden: pendingRequests.length === 0 }">
-          <h3>Pending Requests</h3>
+          <h3>Waiting to connect</h3>
           <div id="requests-list">
             <div v-for="request in pendingRequests" :key="request.id" class="request-item">
               <span>{{ request.partnerUsername }} wants to connect</span>
@@ -137,7 +131,7 @@
       <section id="search-section" v-if="currentView === 'search'">
         <div class="card">
           <div class="card-header">
-            <h2>Search Partner</h2>
+            <h2>Find someone</h2>
             <button class="close-btn" @click="showDashboard">Back</button>
           </div>
           <div class="search-box">
@@ -200,7 +194,7 @@
     </main>
   </div>
 
-  <div id="toast-container">
+  <div id="toast-container" :class="{ 'with-bottom-nav': isAuthenticated }">
     <div
       v-for="toast in toasts"
       :key="toast.id"
@@ -210,6 +204,20 @@
       {{ toast.message }}
     </div>
   </div>
+
+  <nav v-if="isAuthenticated" class="bottom-nav">
+    <button class="tab-btn" :class="{ active: currentView === 'dashboard' }" @click="showDashboard">
+      Home
+      <span v-if="hasPendingRequests" class="tab-dot"></span>
+    </button>
+    <button class="tab-btn" :class="{ active: currentView === 'search' }" @click="showSearch">
+      Search
+    </button>
+    <button class="tab-btn" :class="{ active: currentView === 'stats' }" @click="openStatsFromNav">
+      Stats
+    </button>
+    <button class="tab-btn" @click="logout">Profile</button>
+  </nav>
 </template>
 
 <script setup lang="ts">
@@ -316,6 +324,20 @@ function showStats(connectionId: string, partnerName: string) {
   currentView.value = 'stats';
   isMenuOpen.value = false;
   loadStats();
+}
+
+function openStatsFromNav() {
+  if (!currentStatsConnectionId.value) {
+    if (partners.value.length > 0) {
+      showStats(partners.value[0].id, partners.value[0].partnerUsername);
+    } else {
+      showToast('Select a connection to view stats.', 'info');
+      showDashboard();
+    }
+    return;
+  }
+  const partner = partners.value.find((item) => item.id === currentStatsConnectionId.value);
+  showStats(currentStatsConnectionId.value, partner?.partnerUsername ?? 'Statistics');
 }
 
 function showToast(message: string, type: ToastType = 'info', sticky = false) {
