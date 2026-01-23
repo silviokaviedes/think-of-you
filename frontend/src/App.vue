@@ -31,6 +31,18 @@
         <span v-if="hasPendingRequests" class="indicator-icon burger-indicator">!</span>
       </button>
       <nav v-if="isAuthenticated" class="header-nav" :class="{ active: isMenuOpen }" id="header-nav">
+        <div class="nav-actions">
+          <button
+            class="nav-btn"
+            :class="{ 'has-pending': hasPendingRequests, active: currentView === 'dashboard' }"
+            @click="showDashboard"
+          >
+            Dashboard
+            <span v-if="hasPendingRequests" class="indicator-icon">!</span>
+          </button>
+          <button class="nav-btn" :class="{ active: currentView === 'search' }" @click="showSearch">Search</button>
+          <button class="nav-btn" :class="{ active: currentView === 'stats' }" @click="openStatsFromNav">Stats</button>
+        </div>
         <div id="user-info" :class="{ hidden: !isAuthenticated }">
           <span id="current-username">{{ currentUsername }}</span>
           <button class="secondary-btn" @click="logout">Logout</button>

@@ -148,6 +148,50 @@ body {
     gap: 12px;
 }
 
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-btn {
+    background: transparent;
+    color: var(--text-light);
+    border: none;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 75, 92, 0.12);
+    color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.nav-btn.has-pending {
+    background: rgba(255, 75, 92, 0.14);
+    color: var(--primary);
+    position: relative;
+}
+
+.nav-btn .indicator-icon {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    margin-left: 6px;
+}
+
+.nav-btn.active {
+    background: rgba(255, 75, 92, 0.14);
+    color: var(--primary);
+}
+
 h1 {
     font-family: 'Fraunces', serif;
     color: var(--primary);
@@ -599,6 +643,16 @@ select {
         border-top: 1px solid #e4e6eb;
     }
 
+    .nav-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .nav-actions .nav-btn {
+        width: 100%;
+        padding: 12px 20px;
+    }
+
     .button-group {
         flex-direction: column;
         width: 100%;
@@ -606,6 +660,12 @@ select {
 
     .button-group button {
         width: 100%;
+    }
+}
+
+@media (min-width: 769px) {
+    .bottom-nav {
+        display: none;
     }
 }
 
