@@ -190,7 +190,13 @@ public class ConnectionService {
                 .map(event -> event.getMood() != null ? event.getMood() : Mood.NONE)
                 .orElse(null);
 
-        return new ConnectionDTO(c.getId(), partner.getUsername(), received, sent, c.getStatus(), lastReceivedMood);
+        // Find the last sent mood
+        Mood lastSentMood = thoughtEventRepository
+                .findFirstByConnectionIdAndSenderIdOrderByOccurredAtDesc(c.getId(), userId)
+                .map(event -> event.getMood() != null ? event.getMood() : Mood.NONE)
+                .orElse(null);
+
+        return new ConnectionDTO(c.getId(), partner.getUsername(), received, sent, c.getStatus(), lastReceivedMood, lastSentMood);
     }
 
     private void notifyUpdate(String username) {

@@ -71,6 +71,9 @@
               <div class="stat-item">
                 <span class="stat-label">Sent</span>
                 <span class="stat-value">{{ partner.sentClicks }}</span>
+                <span v-if="partner.lastSentMood && partner.lastSentMood !== 'none'" class="last-mood">
+                  {{ getMoodEmoji(partner.lastSentMood) }}
+                </span>
               </div>
             </div>
 
@@ -734,6 +737,7 @@ interface ConnectionDTO {
   sentClicks: number;
   status: string;
   lastReceivedMood?: Mood | null;
+  lastSentMood?: Mood | null;
 }
 
 type Mood = 'happy' | 'sad' | 'angry' | 'love' | 'excited' | 'worried' | 'grateful' | 'none';

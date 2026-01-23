@@ -10,20 +10,22 @@ public class ConnectionDTO {
     private int sentClicks;
     private Connection.Status status;
     private Mood lastReceivedMood;
+    private Mood lastSentMood;
 
     public ConnectionDTO() {}
 
     public ConnectionDTO(String id, String partnerUsername, int receivedClicks, int sentClicks, Connection.Status status) {
-        this(id, partnerUsername, receivedClicks, sentClicks, status, null);
+        this(id, partnerUsername, receivedClicks, sentClicks, status, null, null);
     }
 
-    public ConnectionDTO(String id, String partnerUsername, int receivedClicks, int sentClicks, Connection.Status status, Mood lastReceivedMood) {
+    public ConnectionDTO(String id, String partnerUsername, int receivedClicks, int sentClicks, Connection.Status status, Mood lastReceivedMood, Mood lastSentMood) {
         this.id = id;
         this.partnerUsername = partnerUsername;
         this.receivedClicks = receivedClicks;
         this.sentClicks = sentClicks;
         this.status = status;
         this.lastReceivedMood = lastReceivedMood;
+        this.lastSentMood = lastSentMood;
     }
 
     public String getId() { return id; }
@@ -38,4 +40,6 @@ public class ConnectionDTO {
     public void setStatus(Connection.Status status) { this.status = status; }
     public Mood getLastReceivedMood() { return lastReceivedMood; }
     public void setLastReceivedMood(Mood lastReceivedMood) { this.lastReceivedMood = lastReceivedMood; }
+    public Mood getLastSentMood() { return lastSentMood; }
+    public void setLastSentMood(Mood lastSentMood) { this.lastSentMood = lastSentMood; }
 }
