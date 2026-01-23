@@ -36,3 +36,38 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+def os = org.gradle.internal.os.OperatingSystem.current()
+def npmCmd = os.isWindows() ? 'npm.cmd' : 'npm'
+def npxCmd = os.isWindows() ? 'npx.cmd' : 'npx'
+def dockerCmd = os.isWindows() ? 'docker.exe' : 'docker'
+
+tasks.register('frontendNpmInstall', Exec) {
+    workingDir 'frontend'
+    commandLine npmCmd, 'install'
+}
+
+tasks.register('frontendPlaywrightInstall', Exec) {
+    workingDir 'frontend'
+    commandLine npxCmd, 'playwright', 'install'
+    dependsOn 'frontendNpmInstall'
+}
+
+tasks.register('playwrightTest', Exec) {
+    workingDir 'frontend'
+    commandLine npmCmd, 'run', 'test:e2e'
+    dependsOn 'frontendPlaywrightInstall'
+}
+
+tasks.register('composeUp', Exec) {
+    commandLine dockerCmd, 'compose', 'up', '--build', '-d'
+}
+
+tasks.register('composeDown', Exec) {
+    commandLine dockerCmd, 'compose', 'down'
+}
+
+tasks.register('e2e') {
+    dependsOn 'composeUp', 'playwrightTest'
+    finalizedBy 'composeDown'
+}
