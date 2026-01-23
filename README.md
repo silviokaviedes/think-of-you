@@ -19,6 +19,39 @@ A web application for couples (including polyamorous relationships) to non-verba
 - **Frontend**: Vue 3 + TypeScript (Vite), Chart.js, SockJS, STOMP.
 - **Database**: MongoDB.
 
+## Project Structure
+```
+think-of-you-3/
+├── frontend/                     # Vue 3 + TypeScript frontend (Vite)
+│   ├── src/
+│   │   ├── assets/               # CSS and static assets
+│   │   ├── App.vue               # Main UI
+│   │   └── main.ts               # Vue entrypoint
+│   ├── index.html                # Vite HTML template
+│   ├── package.json              # Frontend dependencies/scripts
+│   ├── tsconfig.json             # TS config
+│   └── vite.config.ts            # Vite build config
+├── src/
+│   ├── main/
+│   │   ├── java/de/kaviedes/thinkofyou3/
+│   │   │   ├── config/           # WebSocket & Security config
+│   │   │   ├── controller/       # REST API controllers
+│   │   │   ├── dto/              # Data Transfer Objects
+│   │   │   ├── model/            # MongoDB models
+│   │   │   ├── repository/       # MongoDB repositories
+│   │   │   ├── security/         # JWT utilities/filter
+│   │   │   ├── service/          # Business logic
+│   │   │   └── ThinkOfYou3Application.java
+│   │   └── resources/
+│   │       ├── static/           # Built frontend assets (from Vite)
+│   │       └── application.properties
+│   └── test/                     # Unit tests
+├── build.gradle                  # Gradle dependencies
+├── Dockerfile                    # Docker build instructions
+├── docker-compose.yml            # Docker Compose configuration
+└── README.md                     # This file
+```
+
 ## Quick Start (Docker Compose)
 
 The easiest way to run the application locally is with Docker Compose:
