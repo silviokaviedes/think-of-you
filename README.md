@@ -10,7 +10,9 @@ A web application for couples (including polyamorous relationships) to non-verba
 - **Mood Support**: Optionally add a mood (happy, sad, angry, love, excited, worried, grateful, or neutral) to each thought.
 - **Enhanced Statistics**: View click history over time (1, 7, 30 days) with adjustable granularity and mood distribution visualization.
 - **Mood Analytics**: Stacked bar charts showing mood patterns and summary statistics for emotional insights.
-- **Responsive Design**: Works on Desktop, Tablet, and Mobile with a modern burger menu for mobile navigation.
+- **Per-Connection Stats Switching**: Switch the statistics view between partners.
+- **Last Mood Indicators**: See the most recent received and sent mood emoji per connection.
+- **Responsive Design**: Works on Desktop, Tablet, and Mobile with a burger menu and bottom tab navigation.
 
 ## Architecture
 - **Backend**: Spring Boot (Java 21), Spring Security (JWT), Spring Data MongoDB, Spring WebSocket.
@@ -51,6 +53,7 @@ If you prefer to run everything locally without Docker:
 ### Prerequisites
 - Java 21
 - MongoDB running locally
+- Node.js 20+ (for frontend build/dev)
 
 ### Steps
 1. **Start MongoDB** (if not already running):
@@ -71,49 +74,6 @@ If you prefer to run everything locally without Docker:
    Open `http://localhost:8080` in your browser
 
 ### Development Notes
-- The Vue frontend uses Vite for hot reload and proxies API/WebSocket traffic
-- Backend changes require a restart of the Spring Boot application
-- Default MongoDB connection is to `localhost:27017`
-- JWT tokens are stored in localStorage for development
-### Prerequisites
-- Java 21
-- MongoDB
-- Docker and Docker Compose (for containerized deployment)
-
-### Local Development
-
-#### Option 1: Using Docker Compose (Recommended)
-Start everything with a single command:
-```bash
-docker compose up --build
-```
-The application will be available at `http://localhost:8080`.
-
-#### Option 2: Running Locally
-For local development without Docker:
-
-1. **Start MongoDB**:
-   ```bash
-   # Using Docker
-   docker run -d -p 27017:27017 --name mongodb mongo:latest
-   
-   # Or install MongoDB locally
-   # See: https://docs.mongodb.com/manual/installation/
-   ```
-
-2. **Run the Spring Boot application**:
-   ```bash
-   # Unix/Linux/MacOS
-   ./gradlew bootRun
-   
-   # Windows
-   gradlew.bat bootRun
-   ```
-
-3. **Access the application**:
-   Open your browser and navigate to `http://localhost:8080`
-
-#### Development Notes
 - The Vue frontend uses Vite for hot reload and proxies API/WebSocket traffic
 - Backend changes require a restart of the Spring Boot application
 - Default MongoDB connection is to `localhost:27017`
@@ -160,6 +120,7 @@ For instructions on how to deploy this application to production easily, see the
 
 ### Mobile-First Navigation
 - **Burger Menu**: Responsive hamburger menu for mobile devices (768px and below)
+- **Bottom Tabs**: Quick navigation for Dashboard, Search, and Stats on mobile
 - **Smooth Animations**: CSS transitions for menu toggle with transform effects
 - **Accessible Design**: Proper ARIA labels and semantic HTML structure
 - **Touch-Friendly**: Large tap targets optimized for mobile interaction
@@ -245,6 +206,7 @@ The application features a comprehensive notification system for real-time engag
 - **ThoughtEvent**: Logs individual "thinking of you" events with timestamps and mood
 - **Mood**: Enum with 8 emotional states (happy, sad, angry, love, excited, worried, grateful, none)
 - **MoodMetricsDTO**: Data transfer object containing time-bucketed mood distributions and total mood counts
+- **ConnectionDTO**: Includes last received and last sent mood for dashboard indicators
 
 ### Security Features
 - Password hashing with Spring Security

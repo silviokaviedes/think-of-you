@@ -244,7 +244,7 @@
     <button class="tab-btn" :class="{ active: currentView === 'stats' }" @click="openStatsFromNav">
       Stats
     </button>
-    <button class="tab-btn" @click="logout">Profile</button>
+    <button class="tab-btn tab-disabled" disabled title="Coming soon">Profile</button>
   </nav>
 </template>
 
