@@ -1,19 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap');
 
 :root {
-    --primary: #e86a7a;
-    --primary-light: #ffb3b8;
-    --primary-dark: #cf5366;
-    --secondary: #7c6f8a;
-    --accent: #ffb3b8;
-    --bg: #fff6f2;
-    --bg-alt: #fde9e4;
+    --primary: #ff4b5c;
+    --primary-light: #ff7684;
+    --primary-dark: #e63e4d;
+    --secondary: #4b5cff;
+    --accent: #ff6b35;
+    --bg: #f0f2f5;
+    --bg-alt: #e7e9ed;
     --card-bg: #ffffff;
-    --text: #3a2f2f;
-    --text-light: #7a6d6d;
-    --success: #7ec8a7;
-    --danger: #f05a72;
-    --shadow: 0 14px 28px rgba(232, 106, 122, 0.18), 0 6px 12px rgba(58, 47, 47, 0.08);
+    --text: #1c1e21;
+    --text-light: #65676b;
+    --success: #42b72a;
+    --danger: #f02849;
+    --shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
     --radius: 16px;
 }
 
@@ -25,7 +25,7 @@
 
 body {
     font-family: 'Manrope', 'Segoe UI', sans-serif;
-    background: radial-gradient(circle at top, var(--bg) 0%, var(--bg-alt) 60%);
+    background: linear-gradient(135deg, var(--bg) 0%, var(--bg-alt) 100%);
     background-attachment: fixed;
     color: var(--text);
     line-height: 1.6;
@@ -48,7 +48,7 @@ body {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     border-radius: var(--radius);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     position: relative;
     z-index: 999;
 }
@@ -66,7 +66,7 @@ body {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: rgba(232, 106, 122, 0.15);
+    background: rgba(255, 75, 92, 0.15);
     color: var(--primary);
     font-size: 18px;
 }
@@ -75,7 +75,7 @@ body {
     display: none;
     width: 32px;
     height: 32px;
-    background-color: var(--primary);
+    background-color: var(--accent);
     border-radius: 50%;
     align-items: center;
     justify-content: center;
@@ -94,15 +94,15 @@ body {
 
 .notification-icon-mobile:hover {
     transform: scale(1.08);
-    background-color: var(--primary-dark);
+    background-color: var(--primary);
 }
 
 @keyframes glow {
     0%, 100% {
-        box-shadow: 0 0 5px rgba(232, 106, 122, 0.4);
+        box-shadow: 0 0 5px rgba(255, 107, 53, 0.5);
     }
     50% {
-        box-shadow: 0 0 16px rgba(232, 106, 122, 0.7);
+        box-shadow: 0 0 20px rgba(255, 107, 53, 0.8);
     }
 }
 
@@ -191,7 +191,7 @@ section {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     margin-bottom: 24px;
-    border: 1px solid rgba(232, 106, 122, 0.08);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 .card.full-width {
@@ -209,7 +209,7 @@ input {
     width: 100%;
     padding: 14px;
     margin: 12px 0;
-    border: 1px solid rgba(232, 106, 122, 0.2);
+    border: 2px solid #e4e6eb;
     border-radius: 8px;
     font-size: 16px;
     transition: border-color 0.2s;
@@ -264,7 +264,7 @@ button:active {
     align-items: center;
     text-align: center;
     transition: transform 0.3s ease;
-    border: 1px solid rgba(232, 106, 122, 0.08);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 .partner-card:hover {
@@ -287,9 +287,9 @@ button:active {
 
 .stat-item {
     padding: 15px;
-    background: #fff5f2;
+    background: #f0f2f5;
     border-radius: 12px;
-    border: 1px solid rgba(232, 106, 122, 0.1);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 .stat-label {
@@ -325,7 +325,7 @@ button:active {
     font-size: 18px;
     font-weight: 700;
     margin-bottom: 15px;
-    background: linear-gradient(120deg, var(--primary), var(--primary-light));
+    background: linear-gradient(to right, var(--primary), var(--primary-light));
     border-radius: 999px;
 }
 
@@ -351,20 +351,30 @@ button:active {
 .mood-btn {
     padding: 10px 8px;
     font-size: 12px;
-    background-color: #fff5f2;
+    background-color: #f0f2f5;
     color: var(--text);
     border: 2px solid transparent;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    justify-content: center;
+}
+
+.mood-btn .mood-emoji {
+    font-size: 1.5em;
+    line-height: 1;
+}
+
+.mood-btn .mood-text {
+    font-size: 12px;
 }
 
 .mood-btn:hover {
-    background-color: #ffe7e9;
+    background-color: #e4e6eb;
     transform: none;
     box-shadow: none;
 }
@@ -373,7 +383,7 @@ button:active {
     background-color: var(--primary);
     color: white;
     border-color: var(--primary-dark);
-    box-shadow: 0 6px 14px rgba(232, 106, 122, 0.28);
+    box-shadow: none;
 }
 
 .mood-btn.selected:hover {
@@ -393,12 +403,12 @@ button:active {
 }
 
 .secondary-btn {
-    background-color: #f5e9ea;
+    background-color: #e4e6eb;
     color: var(--text);
 }
 
 .secondary-btn:hover {
-    background-color: #eadede;
+    background-color: #d8dadf;
 }
 
 .danger-btn {
@@ -413,7 +423,7 @@ button:active {
 }
 
 .close-btn {
-    background: #f5e9ea;
+    background: #f0f2f5;
     color: var(--text);
     font-size: 14px;
     padding: 8px 16px;
@@ -421,17 +431,17 @@ button:active {
 }
 
 .close-btn:hover {
-    background: #eadede;
+    background: #e4e6eb;
 }
 
 .stats-controls {
     display: flex;
     gap: 12px;
     margin-bottom: 25px;
-    background: #fff5f2;
+    background: #f0f2f5;
     padding: 15px;
     border-radius: 12px;
-    border: 1px solid rgba(232, 106, 122, 0.1);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 select {
@@ -457,7 +467,7 @@ select {
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     animation: fadeIn 0.3s ease;
-    border: 1px solid rgba(232, 106, 122, 0.08);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 #toast-container {
@@ -572,7 +582,7 @@ select {
         align-items: flex-start;
         gap: 10px;
         padding-top: 10px;
-        border-top: 1px solid rgba(232, 106, 122, 0.2);
+        border-top: 1px solid #e4e6eb;
     }
 
     .button-group {
@@ -588,10 +598,10 @@ select {
 #mood-summary {
     margin-top: 20px;
     padding: 15px;
-    background: #fff5f2;
+    background: #f8f9fa;
     border-radius: 8px;
     animation: fadeIn 0.3s ease;
-    border: 1px solid rgba(232, 106, 122, 0.08);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 #mood-summary h3 {
@@ -663,7 +673,7 @@ select {
 }
 
 .tab-btn.active {
-    background: rgba(232, 106, 122, 0.14);
+    background: rgba(255, 75, 92, 0.14);
     color: var(--primary);
 }
 

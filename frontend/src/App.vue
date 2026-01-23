@@ -84,7 +84,8 @@
                   :class="{ selected: selectedMoods[partner.id] === option.value }"
                   @click="selectMood(option.value, partner.id)"
                 >
-                  {{ option.label }}
+                  <span class="mood-emoji">{{ option.emoji }}</span>
+                  <span class="mood-text">{{ option.text }}</span>
                 </button>
               </div>
             </div>
@@ -266,14 +267,14 @@ let stompClient: Client | null = null;
 const hasPendingRequests = computed(() => pendingRequests.value.length > 0);
 
 const moodOptions: MoodOption[] = [
-  { value: 'happy', label: `${getMoodEmoji('happy')} Happy` },
-  { value: 'love', label: `${getMoodEmoji('love')} Love` },
-  { value: 'sad', label: `${getMoodEmoji('sad')} Sad` },
-  { value: 'angry', label: `${getMoodEmoji('angry')} Angry` },
-  { value: 'excited', label: `${getMoodEmoji('excited')} Excited` },
-  { value: 'worried', label: `${getMoodEmoji('worried')} Worried` },
-  { value: 'grateful', label: `${getMoodEmoji('grateful')} Grateful` },
-  { value: 'none', label: `${getMoodEmoji('none')} Neutral` }
+  { value: 'happy', emoji: getMoodEmoji('happy'), text: 'Happy' },
+  { value: 'love', emoji: getMoodEmoji('love'), text: 'Love' },
+  { value: 'sad', emoji: getMoodEmoji('sad'), text: 'Sad' },
+  { value: 'angry', emoji: getMoodEmoji('angry'), text: 'Angry' },
+  { value: 'excited', emoji: getMoodEmoji('excited'), text: 'Excited' },
+  { value: 'worried', emoji: getMoodEmoji('worried'), text: 'Worried' },
+  { value: 'grateful', emoji: getMoodEmoji('grateful'), text: 'Grateful' },
+  { value: 'none', emoji: getMoodEmoji('none'), text: 'Neutral' }
 ];
 
 const moodSummary = computed(() => {
@@ -760,6 +761,7 @@ type ToastType = 'info' | 'success' | 'error';
 
 interface MoodOption {
   value: Mood;
-  label: string;
+  emoji: string;
+  text: string;
 }
 </script>
