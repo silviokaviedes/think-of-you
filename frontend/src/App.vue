@@ -155,7 +155,19 @@
       <section id="stats-section" v-if="currentView === 'stats'">
         <div class="card full-width">
           <div class="card-header">
-            <h2 id="stats-title">{{ statsTitle }}</h2>
+            <div class="stats-header">
+              <h2 id="stats-title">{{ statsTitle }}</h2>
+              <select
+                v-if="partners.length"
+                class="stats-connection-select"
+                v-model="currentStatsConnectionId"
+                @change="onStatsConnectionChange"
+              >
+                <option v-for="partner in partners" :key="partner.id" :value="partner.id">
+                  {{ partner.partnerUsername }}
+                </option>
+              </select>
+            </div>
             <button class="close-btn" @click="showDashboard">Close</button>
           </div>
           <div class="stats-controls">
@@ -327,6 +339,12 @@ function showStats(connectionId: string, partnerName: string) {
   statsTitle.value = `Statistics for ${partnerName}`;
   currentView.value = 'stats';
   isMenuOpen.value = false;
+  loadStats();
+}
+
+function onStatsConnectionChange() {
+  const partner = partners.value.find((item) => item.id === currentStatsConnectionId.value);
+  statsTitle.value = partner ? `Statistics for ${partner.partnerUsername}` : 'Statistics';
   loadStats();
 }
 
