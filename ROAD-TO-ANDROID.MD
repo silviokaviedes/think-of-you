@@ -19,6 +19,11 @@ Recommended tools:
 - npx available in PATH
 - adb available in PATH (Android Studio installs it)
 
+Notes:
+- This assumes the Vue app is a client‑side SPA that can run entirely from the bundled `dist` assets inside a WebView. If you rely on server‑side routing or server rewrites for deep links, ensure the app still works when served from the local bundle.
+- Push notifications on Android 13+ require runtime permission and token registration in the app. This is the main engineering change, along with backend storage and FCM send logic.
+- If you need background data sync or more native features beyond push notifications, you’ll likely need additional native plugins or platform‑specific work later.
+
 ## 1) Add Capacitor to the Vue app (no Ionic)
 
 From the repo root:
