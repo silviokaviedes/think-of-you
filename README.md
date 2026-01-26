@@ -129,6 +129,37 @@ npm install
 npm run build
 ```
 
+## Android (Capacitor)
+
+This repo includes a Capacitor-based Android project under `frontend/android`.
+
+### Quick Android build steps
+```bash
+cd frontend
+npm install
+npm run build
+npx cap sync android
+npx cap open android
+```
+
+Notes:
+- Android Studio is required to open and build the Android project.
+- The Capacitor webDir is set to `../src/main/resources/static` to reuse the existing Vite output.
+- If you change web assets, rerun `npm run build` and `npx cap sync android`.
+
+### Push notifications (FCM)
+Client:
+- Runtime permission is requested on Android 13+.
+- The app registers the device token and calls `POST /api/push/register`.
+
+Server:
+- Set Firebase credentials with one of:
+  - `FIREBASE_SERVICE_ACCOUNT_BASE64` (base64 JSON)
+  - `FIREBASE_SERVICE_ACCOUNT_PATH` (path to JSON)
+  - `GOOGLE_APPLICATION_CREDENTIALS` (fallback)
+- Place `google-services.json` at `frontend/android/app/google-services.json` (do not commit it).
+  - Without this file, Android builds will work but push notifications will not.
+
 ## Deployment
 For instructions on how to deploy this application to production easily, see the [Deployment Guide](DEPLOYMENT.md).
 

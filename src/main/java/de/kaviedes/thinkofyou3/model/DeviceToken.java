@@ -16,9 +16,19 @@ public class DeviceToken {
     private Instant updatedAt;
     private Instant lastSeenAt;
 
+    /**
+     * Default constructor for Spring Data deserialization.
+     */
     public DeviceToken() {
     }
 
+    /**
+     * Creates a new device token record for a user.
+     *
+     * @param userId   user id that owns the device token
+     * @param token    raw FCM device token
+     * @param platform platform identifier (e.g. android, ios)
+     */
     public DeviceToken(String userId, String token, String platform) {
         this.userId = userId;
         this.token = token;
@@ -57,10 +67,18 @@ public class DeviceToken {
         return lastSeenAt;
     }
 
+    /**
+     * Updates the platform string (used when the same token is re-registered).
+     *
+     * @param platform platform identifier (e.g. android, ios)
+     */
     public void setPlatform(String platform) {
         this.platform = platform;
     }
 
+    /**
+     * Updates the timestamps to reflect a fresh token registration.
+     */
     public void touch() {
         Instant now = Instant.now();
         this.updatedAt = now;

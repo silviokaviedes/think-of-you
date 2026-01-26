@@ -328,6 +328,7 @@ onMounted(() => {
   if (isAuthenticated.value) {
     showDashboard();
     connectWebSocket();
+    // Initialize push only on native platforms and once per session.
     setupPushNotifications();
   }
 });
@@ -417,6 +418,7 @@ async function login() {
       localStorage.setItem('username', currentUsername.value);
       showDashboard();
       connectWebSocket();
+      // Attempt push registration right after login.
       setupPushNotifications();
       showToast(`Welcome back, ${currentUsername.value}!`, 'success');
     } else {
@@ -622,6 +624,7 @@ async function setupPushNotifications() {
   if (!Capacitor.isNativePlatform()) return;
 
   try {
+    // Android 13+ requires runtime permission for notifications.
     const permissionStatus = await PushNotifications.checkPermissions();
     if (permissionStatus.receive !== 'granted') {
       const requestStatus = await PushNotifications.requestPermissions();
@@ -631,6 +634,7 @@ async function setupPushNotifications() {
       }
     }
 
+    // Registration event fires with the current FCM token.
     PushNotifications.addListener('registration', (token) => {
       registerPushToken(token.value);
     });
@@ -639,6 +643,7 @@ async function setupPushNotifications() {
       console.error('Push registration error', error);
     });
 
+    // Show a lightweight toast for foreground notifications.
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
       if (notification?.title || notification?.body) {
         showToast(`${notification.title ?? 'Notification'} ${notification.body ?? ''}`.trim(), 'info');
@@ -658,6 +663,7 @@ async function setupPushNotifications() {
 
 async function registerPushToken(tokenValue: string) {
   if (!tokenValue) return;
+  // Send token + platform to backend for storage.
   const platform = Capacitor.getPlatform();
   await apiFetch('/api/push/register', {
     method: 'POST',

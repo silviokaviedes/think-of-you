@@ -32,15 +32,30 @@ public class PushNotificationService {
     private final DeviceTokenRepository deviceTokenRepository;
     private final boolean enabled;
 
+    /**
+     * Initializes the push notification service and attempts to configure Firebase.
+     * If credentials are missing or invalid, push notifications are disabled.
+     *
+     * @param deviceTokenRepository repository used to store and clean up device tokens
+     */
     public PushNotificationService(DeviceTokenRepository deviceTokenRepository) {
         this.deviceTokenRepository = deviceTokenRepository;
         this.enabled = initializeFirebase();
     }
 
+    /**
+     * Registers or updates a device token for a given user.
+     * If the token already exists, its platform and timestamps are refreshed.
+     *
+     * @param userId   user id owning the token
+     * @param token    raw FCM device token
+     * @param platform platform identifier (e.g. android, ios)
+     */
     public void registerToken(String userId, String token, String platform) {
         if (token == null || token.isBlank()) {
             throw new RuntimeException("Token is required");
         }
+        // Normalize platform for consistent storage.
         String normalizedPlatform = platform == null ? "android" : platform.toLowerCase(Locale.ROOT);
 
         Optional<DeviceToken> existing = deviceTokenRepository.findByUserIdAndToken(userId, token);
@@ -56,6 +71,14 @@ public class PushNotificationService {
         deviceTokenRepository.save(deviceToken);
     }
 
+    /**
+     * Sends a push notification about a new thought to all devices registered for the recipient.
+     * If Firebase isn't configured, the call is a no-op.
+     *
+     * @param recipientId    user id receiving the thought
+     * @param senderUsername username of the sender
+     * @param mood           mood value attached to the thought
+     */
     public void sendThoughtNotification(String recipientId, String senderUsername, Mood mood) {
         if (!enabled) {
             return;
@@ -66,6 +89,7 @@ public class PushNotificationService {
             return;
         }
 
+        // Multicast to all active device tokens for the recipient.
         List<String> rawTokens = tokens.stream().map(DeviceToken::getToken).toList();
 
         String emoji = getMoodEmoji(mood);
@@ -85,12 +109,19 @@ public class PushNotificationService {
 
         try {
             BatchResponse response = FirebaseMessaging.getInstance().sendMulticast(message);
+            // Remove invalid tokens reported by FCM to keep the list clean.
             cleanupInvalidTokens(tokens, response);
         } catch (Exception ex) {
             log.error("Failed to send FCM notification", ex);
         }
     }
 
+    /**
+     * Removes tokens that FCM reports as invalid.
+     *
+     * @param tokens    list of tokens used in the multicast send
+     * @param response  FCM batch response, aligned with token order
+     */
     private void cleanupInvalidTokens(List<DeviceToken> tokens, BatchResponse response) {
         if (response.getFailureCount() == 0) {
             return;
@@ -107,6 +138,15 @@ public class PushNotificationService {
         }
     }
 
+    /**
+     * Initializes Firebase Admin SDK using environment-provided credentials.
+     * The following sources are checked in order:
+     * - FIREBASE_SERVICE_ACCOUNT_BASE64 (base64 JSON)
+     * - FIREBASE_SERVICE_ACCOUNT_PATH (filesystem path)
+     * - GOOGLE_APPLICATION_CREDENTIALS (filesystem path)
+     *
+     * @return true if Firebase initialized successfully
+     */
     private boolean initializeFirebase() {
         if (!FirebaseApp.getApps().isEmpty()) {
             return true;
@@ -129,9 +169,15 @@ public class PushNotificationService {
         }
     }
 
+    /**
+     * Resolves Firebase service account credentials from environment configuration.
+     *
+     * @return credentials as bytes, or null if no credentials are configured
+     */
     private byte[] resolveCredentials() throws IOException {
         String base64 = System.getenv("FIREBASE_SERVICE_ACCOUNT_BASE64");
         if (base64 != null && !base64.isBlank()) {
+            // Prefer env var base64 for container-friendly deployments.
             return Base64.getDecoder().decode(base64);
         }
 
@@ -143,9 +189,16 @@ public class PushNotificationService {
             return null;
         }
 
+        // Fall back to filesystem path if provided.
         return Files.readAllBytes(Path.of(path));
     }
 
+    /**
+     * Maps a mood enum to a readable emoji for notifications.
+     *
+     * @param mood mood value
+     * @return emoji string
+     */
     private String getMoodEmoji(Mood mood) {
         return switch (mood) {
             case HAPPY -> "ðŸ˜Š";

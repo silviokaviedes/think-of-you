@@ -17,11 +17,24 @@ public class PushController {
     private final PushNotificationService pushNotificationService;
     private final AuthService authService;
 
+    /**
+     * Push API controller for device token registration.
+     *
+     * @param pushNotificationService service for token management and FCM
+     * @param authService             used to resolve authenticated user
+     */
     public PushController(PushNotificationService pushNotificationService, AuthService authService) {
         this.pushNotificationService = pushNotificationService;
         this.authService = authService;
     }
 
+    /**
+     * Registers or refreshes a device token for the authenticated user.
+     *
+     * @param request   payload containing token and platform
+     * @param principal authenticated principal
+     * @return 200 OK on success
+     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody PushRegisterRequest request, Principal principal) {
         String username = principal.getName();

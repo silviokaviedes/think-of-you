@@ -178,6 +178,7 @@ public class ConnectionService {
                     username, mood.getValue(), moodEmoji));
         });
 
+        // Fire push notification to recipient devices (no-op if FCM isn't configured).
         pushNotificationService.sendThoughtNotification(recipientId, username, mood);
         
         // Send refresh to sender
