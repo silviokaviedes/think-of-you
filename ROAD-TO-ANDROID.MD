@@ -185,3 +185,43 @@ In Android Studio:
   - Add backend endpoints + FCM sending logic
 
 If you want, I can draft the exact frontend code for Capacitor push token registration and the backend FCM integration steps next.
+
+---
+
+## Concrete checklist (before touching production code)
+
+### A) Android project setup
+- [ ] Add Capacitor dependencies to `frontend/package.json` and initialize Capacitor.
+- [ ] Generate `capacitor.config.*` with app name + app ID.
+- [ ] Build web assets (`frontend/dist`) and add Android platform (`frontend/android`).
+- [ ] Confirm Android Studio opens and Gradle sync completes.
+
+### B) Push notifications (client)
+- [ ] Add `@capacitor/push-notifications` and sync Android project.
+- [ ] Implement runtime notification permission request for Android 13+.
+- [ ] Register device, obtain FCM token, and send token to backend.
+- [ ] Handle token refresh / invalidation.
+
+### C) Push notifications (server)
+- [ ] Add Mongo collection/model for device tokens (per user + device).
+- [ ] Add endpoints:
+  - [ ] `POST /api/push/register` to store/update device tokens
+  - [ ] `POST /api/push/send` or server-side trigger when a thought is sent
+- [ ] Add Firebase Admin SDK and credentials management.
+- [ ] Wire FCM send logic to existing “thought sent” flow.
+
+### D) Release readiness
+- [ ] Define `versionCode` / `versionName` in Android Gradle config.
+- [ ] Create signing keystore and configure release signing.
+- [ ] Generate signed AAB from Android Studio.
+- [ ] Add app icons and splash screen assets.
+
+### E) Play Store requirements
+- [ ] Draft and host a Privacy Policy.
+- [ ] Prepare Data Safety declaration (based on actual data collected).
+- [ ] Complete Play Store listing assets (title, description, screenshots, feature graphic).
+
+### F) Verification
+- [ ] Test login, connections, thoughts, stats in Android emulator/device.
+- [ ] Verify WebSocket updates work in foreground.
+- [ ] Verify push notifications in background/closed state.
