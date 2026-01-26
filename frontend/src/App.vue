@@ -253,6 +253,8 @@ import { computed, nextTick, onMounted, ref } from 'vue';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import Chart from 'chart.js/auto';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
 
 const token = ref<string>(localStorage.getItem('token') ?? '');
 const currentUsername = ref<string>(localStorage.getItem('username') ?? '');
@@ -290,6 +292,7 @@ const toasts = ref<ToastItem[]>([]);
 let toastId = 0;
 
 let stompClient: Client | null = null;
+let pushInitialized = false;
 
 const hasPendingRequests = computed(() => pendingRequests.value.length > 0);
 
@@ -325,6 +328,7 @@ onMounted(() => {
   if (isAuthenticated.value) {
     showDashboard();
     connectWebSocket();
+    setupPushNotifications();
   }
 });
 
@@ -413,6 +417,7 @@ async function login() {
       localStorage.setItem('username', currentUsername.value);
       showDashboard();
       connectWebSocket();
+      setupPushNotifications();
       showToast(`Welcome back, ${currentUsername.value}!`, 'success');
     } else {
       showToast('Login failed. Please check your credentials.', 'error');
@@ -457,6 +462,7 @@ function logout() {
   token.value = '';
   currentUsername.value = '';
   disconnectWebSocket();
+  pushInitialized = false;
   currentView.value = 'auth';
   partners.value = [];
   pendingRequests.value = [];
@@ -609,6 +615,54 @@ function disconnectWebSocket() {
   if (!stompClient) return;
   stompClient.deactivate();
   stompClient = null;
+}
+
+async function setupPushNotifications() {
+  if (pushInitialized) return;
+  if (!Capacitor.isNativePlatform()) return;
+
+  try {
+    const permissionStatus = await PushNotifications.checkPermissions();
+    if (permissionStatus.receive !== 'granted') {
+      const requestStatus = await PushNotifications.requestPermissions();
+      if (requestStatus.receive !== 'granted') {
+        showToast('Push notifications disabled.', 'info');
+        return;
+      }
+    }
+
+    PushNotifications.addListener('registration', (token) => {
+      registerPushToken(token.value);
+    });
+
+    PushNotifications.addListener('registrationError', (error) => {
+      console.error('Push registration error', error);
+    });
+
+    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      if (notification?.title || notification?.body) {
+        showToast(`${notification.title ?? 'Notification'} ${notification.body ?? ''}`.trim(), 'info');
+      }
+    });
+
+    PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+      console.log('Push action performed', notification);
+    });
+
+    await PushNotifications.register();
+    pushInitialized = true;
+  } catch (error) {
+    console.error('Failed to initialize push notifications', error);
+  }
+}
+
+async function registerPushToken(tokenValue: string) {
+  if (!tokenValue) return;
+  const platform = Capacitor.getPlatform();
+  await apiFetch('/api/push/register', {
+    method: 'POST',
+    body: JSON.stringify({ token: tokenValue, platform })
+  });
 }
 
 async function loadStats() {

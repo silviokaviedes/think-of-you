@@ -39,6 +39,9 @@ class ConnectionServiceTest {
     @Mock
     private SimpMessagingTemplate messagingTemplate;
 
+    @Mock
+    private PushNotificationService pushNotificationService;
+
     @InjectMocks
     private ConnectionService connectionService;
 
@@ -78,5 +81,6 @@ class ConnectionServiceTest {
         verify(thoughtEventRepository).save(any(ThoughtEvent.class));
         verify(messagingTemplate).convertAndSend(contains("/topic/updates/bob"), contains("\"mood\":\"happy\""));
         verify(messagingTemplate).convertAndSend("/topic/updates/alice", "refresh");
+        verify(pushNotificationService).sendThoughtNotification("u2", "alice", Mood.HAPPY);
     }
 }

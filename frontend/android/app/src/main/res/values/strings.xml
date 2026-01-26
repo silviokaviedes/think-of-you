@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Thinking of You</string>
+    <string name="title_activity_main">Thinking of You</string>
+    <string name="package_name">de.kaviedes.thinkofyou</string>
+    <string name="custom_url_scheme">de.kaviedes.thinkofyou</string>
+</resources>

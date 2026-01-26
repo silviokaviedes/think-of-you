@@ -145,9 +145,13 @@ For instructions on how to deploy this application to production easily, see the
 - `DELETE /api/connections/{id}`: Disconnect
 - `GET /api/metrics?connectionId=...&from=...&to=...&bucketMinutes=...&direction=received|sent`: Get statistics
 - `GET /api/metrics/moods?connectionId=...&from=...&to=...&bucketMinutes=...&direction=received|sent`: Get mood-based statistics with distribution data
+- `POST /api/push/register`: { token, platform } - Register device token for push notifications
 
 ## Environment Variables
 - `MONGO_HOST`: Hostname of the MongoDB server (default: localhost).
+- `FIREBASE_SERVICE_ACCOUNT_BASE64`: Base64-encoded Firebase service account JSON for FCM.
+- `FIREBASE_SERVICE_ACCOUNT_PATH`: Path to Firebase service account JSON (alternative to base64).
+- `GOOGLE_APPLICATION_CREDENTIALS`: Standard Firebase credentials path (fallback).
 
 ## UI/UX Features
 

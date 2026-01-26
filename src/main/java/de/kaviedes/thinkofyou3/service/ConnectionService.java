@@ -8,6 +8,7 @@ import de.kaviedes.thinkofyou3.model.User;
 import de.kaviedes.thinkofyou3.repository.ConnectionRepository;
 import de.kaviedes.thinkofyou3.repository.ThoughtEventRepository;
 import de.kaviedes.thinkofyou3.repository.UserRepository;
+import de.kaviedes.thinkofyou3.service.PushNotificationService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -21,13 +22,16 @@ public class ConnectionService {
     private final UserRepository userRepository;
     private final ThoughtEventRepository thoughtEventRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final PushNotificationService pushNotificationService;
 
     public ConnectionService(ConnectionRepository connectionRepository, UserRepository userRepository,
-                             ThoughtEventRepository thoughtEventRepository, SimpMessagingTemplate messagingTemplate) {
+                             ThoughtEventRepository thoughtEventRepository, SimpMessagingTemplate messagingTemplate,
+                             PushNotificationService pushNotificationService) {
         this.connectionRepository = connectionRepository;
         this.userRepository = userRepository;
         this.thoughtEventRepository = thoughtEventRepository;
         this.messagingTemplate = messagingTemplate;
+        this.pushNotificationService = pushNotificationService;
     }
 
     public void requestConnection(String requesterUsername, String recipientUsername) {
@@ -173,6 +177,8 @@ public class ConnectionService {
                 String.format("{\"type\":\"thought\",\"sender\":\"%s\",\"mood\":\"%s\",\"emoji\":\"%s\"}", 
                     username, mood.getValue(), moodEmoji));
         });
+
+        pushNotificationService.sendThoughtNotification(recipientId, username, mood);
         
         // Send refresh to sender
         notifyUpdate(username);

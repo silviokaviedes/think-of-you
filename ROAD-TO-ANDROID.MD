@@ -23,6 +23,10 @@ Notes:
 - This assumes the Vue app is a client‑side SPA that can run entirely from the bundled `dist` assets inside a WebView. If you rely on server‑side routing or server rewrites for deep links, ensure the app still works when served from the local bundle.
 - Push notifications on Android 13+ require runtime permission and token registration in the app. This is the main engineering change, along with backend storage and FCM send logic.
 - If you need background data sync or more native features beyond push notifications, you’ll likely need additional native plugins or platform‑specific work later.
+- Android Studio installation is required before running any Android build/sync steps. Easiest path:
+  - Download Android Studio from the official site.
+  - During setup, select the **Android SDK**, **Android SDK Platform**, and **Android SDK Build‑Tools** components.
+  - After install, open Android Studio once so it can finish SDK setup.
 
 ## 1) Add Capacitor to the Vue app (no Ionic)
 
@@ -38,7 +42,7 @@ npx cap init "Thinking of You" "de.kaviedes.thinkofyou"
 When prompted:
 - App name: Thinking of You
 - App ID (package name): de.kaviedes.thinkofyou
-- Web directory: dist
+- Web directory: ../src/main/resources/static (matches current Vite output)
 
 ## 2) Build the web app
 
@@ -46,7 +50,7 @@ When prompted:
 npm run build
 ```
 
-This outputs frontend/dist which Capacitor will package into the Android app.
+This outputs the bundled assets to `src/main/resources/static`, which Capacitor will package into the Android app via `webDir`.
 
 ## 3) Add Android platform
 
@@ -82,7 +86,7 @@ For now, use option A for minimal changes.
 
 ## 6) Configure Android WebView to load the built app
 
-Capacitor will load the compiled dist locally by default.
+Capacitor will load the compiled static assets locally by default.
 
 If you want the app to load live content from your hosted URL instead (useful for quick updates), set:
 
@@ -191,24 +195,22 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 ## Concrete checklist (before touching production code)
 
 ### A) Android project setup
-- [ ] Add Capacitor dependencies to `frontend/package.json` and initialize Capacitor.
-- [ ] Generate `capacitor.config.*` with app name + app ID.
-- [ ] Build web assets (`frontend/dist`) and add Android platform (`frontend/android`).
+- [x] Add Capacitor dependencies to `frontend/package.json` and initialize Capacitor.
+- [x] Generate `capacitor.config.*` with app name + app ID.
+- [x] Build web assets and add Android platform (`frontend/android`).
 - [ ] Confirm Android Studio opens and Gradle sync completes.
 
 ### B) Push notifications (client)
-- [ ] Add `@capacitor/push-notifications` and sync Android project.
-- [ ] Implement runtime notification permission request for Android 13+.
-- [ ] Register device, obtain FCM token, and send token to backend.
-- [ ] Handle token refresh / invalidation.
+- [x] Add `@capacitor/push-notifications` and sync Android project.
+- [x] Implement runtime notification permission request for Android 13+.
+- [x] Register device, obtain FCM token, and send token to backend.
+- [x] Handle token refresh / invalidation (via re-registration events).
 
 ### C) Push notifications (server)
-- [ ] Add Mongo collection/model for device tokens (per user + device).
-- [ ] Add endpoints:
-  - [ ] `POST /api/push/register` to store/update device tokens
-  - [ ] `POST /api/push/send` or server-side trigger when a thought is sent
-- [ ] Add Firebase Admin SDK and credentials management.
-- [ ] Wire FCM send logic to existing “thought sent” flow.
+- [x] Add Mongo collection/model for device tokens (per user + device).
+- [x] Add endpoint `POST /api/push/register` to store/update device tokens.
+- [x] Trigger push notifications from the “thought sent” flow.
+- [x] Add Firebase Admin SDK and credentials management.
 
 ### D) Release readiness
 - [ ] Define `versionCode` / `versionName` in Android Gradle config.
@@ -225,3 +227,129 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [ ] Test login, connections, thoughts, stats in Android emulator/device.
 - [ ] Verify WebSocket updates work in foreground.
 - [ ] Verify push notifications in background/closed state.
+
+---
+
+## What still needs to be done (technical + organizational)
+
+### 1) Accounts and access (organizational)
+
+#### 1.0 Install Android Studio (required before Android steps)
+- If you don’t have it yet, install Android Studio before any Android build/sync steps:
+  - Download Android Studio from the official site.
+  - Keep the default install options (they include the SDK + Build Tools).
+  - Launch Android Studio once to complete SDK setup.
+
+#### 1.1 Google Play Console (required to publish)
+- Create or use a Google account dedicated to the app.
+- Sign up for a **Google Play Console developer account**.
+  - Pay the one‑time registration fee.
+  - Complete identity/organization verification when prompted.
+  - Set up a developer profile (name, email, website).
+- Add additional owners/testers to the Play Console (optional but recommended).
+
+#### 1.2 Firebase (required for push notifications)
+- Create a Firebase project for the app.
+- In Firebase Console, add an **Android app** with package name `de.kaviedes.thinkofyou`.
+- Download `google-services.json` and place it here:
+  - `frontend/android/app/google-services.json`
+- Generate a **Service Account** in Firebase and export the JSON key.
+  - Decide how you will store credentials in production:
+    - `FIREBASE_SERVICE_ACCOUNT_BASE64` (base64‑encoded JSON)
+    - `FIREBASE_SERVICE_ACCOUNT_PATH` (path to JSON on the server)
+    - or `GOOGLE_APPLICATION_CREDENTIALS` (standard fallback)
+- Store credentials securely in your hosting provider’s secrets/variables.
+
+#### 1.3 Hosting + domain (recommended)
+- Ensure the backend + frontend are served over **HTTPS**.
+- If using a custom domain, configure SSL and verify the domain.
+- Confirm the API base URL strategy:
+  - Option A (recommended): backend serves the frontend at same origin.
+  - Option B: set `VITE_API_BASE_URL` and update frontend requests.
+
+---
+
+### 2) App build & signing (technical + organizational)
+
+#### 2.1 Android Studio project verification
+- Ensure Android Studio is installed first (see 1.0).
+- Run:
+  ```bash
+  cd frontend
+  npx cap open android
+  ```
+- Wait for Gradle sync to complete.
+- Fix any missing SDK/Build Tools prompts in Android Studio.
+
+#### 2.2 Signing key (required for Play Store)
+- Generate a **keystore** for release signing.
+- Store the keystore securely (never commit it).
+- Configure signing in `frontend/android/app/build.gradle` for the `release` build type.
+- Record:
+  - keystore path
+  - alias name
+  - key password and keystore password
+- Decide who owns and safeguards the keystore (you cannot change it later without migration).
+
+#### 2.3 Build artifacts
+- Build a **signed AAB** (Android App Bundle) for Play Store upload.
+- Also generate a debug APK for internal testing.
+
+---
+
+### 3) Product readiness (organizational + compliance)
+
+#### 3.1 Privacy policy
+- Draft a privacy policy that covers:
+  - data collected (usernames, tokens, metadata)
+  - how data is stored (MongoDB, Firebase)
+  - retention and deletion policy
+  - contact method for requests
+- Host the privacy policy on a public URL.
+- Add the link in the Play Console listing.
+
+#### 3.2 Data Safety form (Play Store)
+- Fill out the Data Safety questionnaire in Play Console.
+- Confirm actual data collection and sharing practices:
+  - account data (username)
+  - device identifiers / push tokens
+  - analytics (if any)
+  - encryption in transit (HTTPS)
+- Ensure the answers match the actual implementation.
+
+#### 3.3 Store listing assets
+- Create:
+  - App title and short description
+  - Full description
+  - App icon (512×512)
+  - Feature graphic (1024×500)
+  - Screenshots (phone; optional tablet)
+- Decide content rating and target audience.
+- Provide contact email and website.
+
+---
+
+### 4) Technical validation before release
+
+#### 4.1 Functional checks on device
+- Login, connection requests, thoughts, stats.
+- WebSocket updates in foreground.
+- Push notification delivery in background/closed state.
+
+#### 4.2 Performance and stability
+- Cold start time
+- Network error handling
+- Token refresh handling
+
+#### 4.3 Release checklist
+- Increment `versionCode` / `versionName`.
+- Confirm correct environment variables for production.
+- Upload AAB to the correct Play Console track:
+  - Internal testing → Closed testing → Open testing → Production
+
+---
+
+### 5) Optional but recommended (organizational)
+- Create a support email address (required by Play Console).
+- Set up a basic website or landing page.
+- Prepare a simple support/FAQ page.
