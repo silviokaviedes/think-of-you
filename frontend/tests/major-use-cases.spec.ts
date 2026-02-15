@@ -49,6 +49,19 @@ test('User can register and login', async ({ page }) => {
   await expect(page.locator('#dashboard-section')).toContainText('My People');
 });
 
+test('Logged out user can open News tab', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#auth-section')).toBeVisible();
+
+  await page.getByRole('button', { name: 'News' }).click();
+  await expect(page.locator('#news-section')).toBeVisible();
+  await expect(page.locator('#news-section')).toContainText('Latest News');
+  await expect(page.locator('#news-section')).toContainText('Profile Tab Is Live');
+
+  await page.getByRole('button', { name: 'Back to Login' }).click();
+  await expect(page.locator('#auth-section')).toBeVisible();
+});
+
 test('User can search and send a connection request', async ({ page, request }) => {
   const requester = uniqueUser('requester');
   const recipient = uniqueUser('recipient');

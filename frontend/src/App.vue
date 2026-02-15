@@ -43,12 +43,21 @@
           <button class="nav-btn" :class="{ active: currentView === 'search' }" @click="showSearch">Search</button>
           <button class="nav-btn" :class="{ active: currentView === 'stats' }" @click="openStatsFromNav">Stats</button>
           <button class="nav-btn" :class="{ active: currentView === 'profile' }" @click="showProfile">Profile</button>
+          <button class="nav-btn" :class="{ active: currentView === 'news' }" @click="showNews">News</button>
         </div>
         <div id="user-info" :class="{ hidden: !isAuthenticated }">
           <span id="current-username">{{ currentUsername }}</span>
           <button class="secondary-btn" @click="logout">Logout</button>
         </div>
       </nav>
+      <button
+        v-else
+        class="nav-btn"
+        :class="{ active: currentView === 'news' }"
+        @click="showNews"
+      >
+        News
+      </button>
     </header>
 
     <main>
@@ -238,6 +247,25 @@
           </div>
         </div>
       </section>
+
+      <section id="news-section" v-if="currentView === 'news'">
+        <div class="card full-width">
+          <div class="card-header">
+            <h2>Latest News</h2>
+            <button class="close-btn" @click="closeNews">{{ isAuthenticated ? 'Back' : 'Back to Login' }}</button>
+          </div>
+          <p style="color: var(--text-light); margin-bottom: 16px;">
+            Recent updates and newest features in Thinking of You.
+          </p>
+          <div class="mood-grid">
+            <div v-for="item in newsItems" :key="item.title" class="mood-item" style="text-align: left;">
+              <div class="mood-name" style="font-size: 12px; font-weight: 700;">{{ item.date }}</div>
+              <div style="font-size: 16px; font-weight: 700; margin: 4px 0;">{{ item.title }}</div>
+              <div style="font-size: 14px; color: var(--text-light);">{{ item.description }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -266,6 +294,9 @@
     <button class="tab-btn" :class="{ active: currentView === 'profile' }" @click="showProfile">
       Profile
     </button>
+    <button class="tab-btn" :class="{ active: currentView === 'news' }" @click="showNews">
+      News
+    </button>
   </nav>
 </template>
 
@@ -281,7 +312,7 @@ const token = ref<string>(localStorage.getItem('token') ?? '');
 const currentUsername = ref<string>(localStorage.getItem('username') ?? '');
 const isAuthenticated = computed(() => Boolean(token.value));
 
-const currentView = ref<'auth' | 'dashboard' | 'search' | 'stats' | 'profile'>(
+const currentView = ref<'auth' | 'dashboard' | 'search' | 'stats' | 'profile' | 'news'>(
   isAuthenticated.value ? 'dashboard' : 'auth'
 );
 const isMenuOpen = ref(false);
@@ -321,6 +352,28 @@ let stompClient: Client | null = null;
 let pushInitialized = false;
 
 const hasPendingRequests = computed(() => pendingRequests.value.length > 0);
+const newsItems: NewsItem[] = [
+  {
+    date: 'Jan 2026',
+    title: 'Profile Tab Is Live',
+    description: 'You can now change your password directly in the new Profile tab.'
+  },
+  {
+    date: 'Jan 2026',
+    title: 'Mood Analytics Dashboard',
+    description: 'Statistics now include mood distribution and stacked charts over time.'
+  },
+  {
+    date: 'Jan 2026',
+    title: 'Android + Push Notifications',
+    description: 'Capacitor Android support and push token registration are integrated.'
+  },
+  {
+    date: 'Jan 2026',
+    title: 'Connection Workflow Improvements',
+    description: 'Sent requests can be canceled and pending requests are highlighted in navigation.'
+  }
+];
 
 const moodOptions: MoodOption[] = [
   { value: 'happy', emoji: getMoodEmoji('happy'), text: 'Happy' },
@@ -380,6 +433,19 @@ function showSearch() {
 function showProfile() {
   currentView.value = 'profile';
   isMenuOpen.value = false;
+}
+
+function showNews() {
+  currentView.value = 'news';
+  isMenuOpen.value = false;
+}
+
+function closeNews() {
+  if (isAuthenticated.value) {
+    showDashboard();
+    return;
+  }
+  currentView.value = 'auth';
 }
 
 function showStats(connectionId: string, partnerName: string) {
@@ -931,5 +997,11 @@ interface MoodOption {
   value: Mood;
   emoji: string;
   text: string;
+}
+
+interface NewsItem {
+  date: string;
+  title: string;
+  description: string;
 }
 </script>
