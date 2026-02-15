@@ -208,3 +208,52 @@ test('User can change password from profile', async ({ page }) => {
   await page.getByRole('button', { name: 'Login' }).click();
   await expect(page.locator('#toast-container')).toContainText('Welcome back');
 });
+
+test('User can view event log timeline with configurable amount', async ({ page, request }) => {
+  const sender = uniqueUser('event-sender');
+  const receiver = uniqueUser('event-receiver');
+
+  await registerUser(request, sender, password);
+  await registerUser(request, receiver, password);
+
+  const senderAuth = await loginUser(request, sender, password);
+  const receiverAuth = await loginUser(request, receiver, password);
+
+  await request.post('/api/connections/request', {
+    data: { username: receiver },
+    headers: { Authorization: `Bearer ${senderAuth.token}` }
+  });
+
+  const pendingRes = await request.get('/api/connections/requests', {
+    headers: { Authorization: `Bearer ${receiverAuth.token}` }
+  });
+  const pending = (await pendingRes.json()) as Array<{ id: string; partnerUsername: string }>;
+  const match = pending.find((item) => item.partnerUsername === sender);
+  expect(match).toBeTruthy();
+
+  await request.post(`/api/connections/${match!.id}/accept`, {
+    headers: { Authorization: `Bearer ${receiverAuth.token}` }
+  });
+
+  const connectionsRes = await request.get('/api/connections', {
+    headers: { Authorization: `Bearer ${senderAuth.token}` }
+  });
+  const connections = (await connectionsRes.json()) as Array<{ id: string; partnerUsername: string }>;
+  const connection = connections.find((item) => item.partnerUsername === receiver);
+  expect(connection).toBeTruthy();
+
+  await request.post(`/api/connections/${connection!.id}/think`, {
+    data: { mood: 'love' },
+    headers: { Authorization: `Bearer ${senderAuth.token}` }
+  });
+
+  await loginViaStorage(page, senderAuth.token, senderAuth.username);
+
+  await page.getByRole('button', { name: 'Event Log' }).first().click();
+  await expect(page.locator('#event-log-section')).toBeVisible();
+  await expect(page.locator('#event-log-section')).toContainText('Event Log');
+  await expect(page.locator('#event-log-section')).toContainText(`to ${receiver}`);
+
+  await page.locator('#event-log-section').locator('select').first().selectOption('10');
+  await expect(page.locator('#event-log-section')).toContainText('Sent');
+});

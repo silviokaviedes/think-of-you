@@ -43,6 +43,7 @@
           <button class="nav-btn" :class="{ active: currentView === 'search' }" @click="showSearch">Search</button>
           <button class="nav-btn" :class="{ active: currentView === 'stats' }" @click="openStatsFromNav">Stats</button>
           <button class="nav-btn" :class="{ active: currentView === 'profile' }" @click="showProfile">Profile</button>
+          <button class="nav-btn" :class="{ active: currentView === 'events' }" @click="showEventLog">Event Log</button>
           <button class="nav-btn" :class="{ active: currentView === 'news' }" @click="showNews">News</button>
         </div>
         <div id="user-info" :class="{ hidden: !isAuthenticated }">
@@ -248,6 +249,62 @@
         </div>
       </section>
 
+      <section id="event-log-section" v-if="currentView === 'events'">
+        <div class="card full-width">
+          <div class="card-header">
+            <h2>Event Log</h2>
+            <button class="close-btn" @click="showDashboard">Back</button>
+          </div>
+          <p style="color: var(--text-light); margin-bottom: 12px;">Most recent events appear first.</p>
+          <div class="stats-controls">
+            <select v-model.number="eventLogLimit" @change="loadEventLog">
+              <option :value="10">10 events</option>
+              <option :value="25">25 events</option>
+              <option :value="50">50 events</option>
+              <option :value="100">100 events</option>
+            </select>
+            <select v-model="eventLogDirection" @change="loadEventLog">
+              <option value="all">Sent + Received</option>
+              <option value="sent">Sent only</option>
+              <option value="received">Received only</option>
+            </select>
+          </div>
+          <div v-if="eventLogItems.length === 0" style="text-align: center; color: #666; padding: 12px 0;">
+            No events yet.
+          </div>
+          <div v-else style="display: flex; flex-direction: column; gap: 10px;">
+            <div
+              v-for="item in eventLogItems"
+              :key="`${item.connectionId}-${item.occurredAt}-${item.direction}`"
+              style="
+                background: #fff;
+                border: 1px solid rgba(0, 0, 0, 0.05);
+                border-left: 4px solid var(--primary);
+                border-radius: 10px;
+                padding: 12px 14px;
+                text-align: left;
+              "
+            >
+              <div style="font-size: 12px; font-weight: 700; color: var(--text-light);">
+                {{ formatEventTime(item.occurredAt) }}
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                <span
+                  :title="getMoodLabel(item.mood)"
+                  style="font-size: 2em; line-height: 1; cursor: help; display: inline-flex; min-width: 1.25em; justify-content: center;"
+                >
+                  {{ getMoodEmoji(item.mood) }}
+                </span>
+                <div style="font-size: 14px;">
+                  <strong>{{ item.direction === 'sent' ? 'Sent' : 'Received' }}</strong>
+                  {{ item.direction === 'sent' ? `to ${item.partnerUsername}` : `from ${item.partnerUsername}` }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="news-section" v-if="currentView === 'news'">
         <div class="card full-width">
           <div class="card-header">
@@ -294,6 +351,9 @@
     <button class="tab-btn" :class="{ active: currentView === 'profile' }" @click="showProfile">
       Profile
     </button>
+    <button class="tab-btn" :class="{ active: currentView === 'events' }" @click="showEventLog">
+      Event Log
+    </button>
     <button class="tab-btn" :class="{ active: currentView === 'news' }" @click="showNews">
       News
     </button>
@@ -312,7 +372,7 @@ const token = ref<string>(localStorage.getItem('token') ?? '');
 const currentUsername = ref<string>(localStorage.getItem('username') ?? '');
 const isAuthenticated = computed(() => Boolean(token.value));
 
-const currentView = ref<'auth' | 'dashboard' | 'search' | 'stats' | 'profile' | 'news'>(
+const currentView = ref<'auth' | 'dashboard' | 'search' | 'stats' | 'profile' | 'events' | 'news'>(
   isAuthenticated.value ? 'dashboard' : 'auth'
 );
 const isMenuOpen = ref(false);
@@ -341,6 +401,9 @@ const statsRange = ref(1);
 const statsBucket = ref(60);
 const statsDirection = ref<'received' | 'sent'>('received');
 const statsData = ref<MoodMetricsDTO | null>(null);
+const eventLogItems = ref<EventLogItemDTO[]>([]);
+const eventLogLimit = ref(25);
+const eventLogDirection = ref<'all' | 'sent' | 'received'>('all');
 
 const chartCanvas = ref<HTMLCanvasElement | null>(null);
 let chart: Chart | null = null;
@@ -354,24 +417,29 @@ let pushInitialized = false;
 const hasPendingRequests = computed(() => pendingRequests.value.length > 0);
 const newsItems: NewsItem[] = [
   {
-    date: 'Jan 2026',
-    title: 'Profile Tab Is Live',
-    description: 'You can now change your password directly in the new Profile tab.'
+    date: 'Feb 2026',
+    title: 'Event Log Timeline Added',
+    description: 'New Event Log tab with a vertical timeline for sent and received thoughts.'
+  },
+  {
+    date: 'Feb 2026',
+    title: 'Event Log Filters',
+    description: 'Choose how many events to show and filter by Sent, Received, or both.'
+  },
+  {
+    date: 'Feb 2026',
+    title: 'Improved Event Row Layout',
+    description: 'Mood emoji is now aligned in front of each event line with a tooltip label.'
   },
   {
     date: 'Jan 2026',
-    title: 'Mood Analytics Dashboard',
-    description: 'Statistics now include mood distribution and stacked charts over time.'
+    title: 'Profile Password Change',
+    description: 'Users can change account passwords directly in the Profile tab.'
   },
   {
     date: 'Jan 2026',
-    title: 'Android + Push Notifications',
-    description: 'Capacitor Android support and push token registration are integrated.'
-  },
-  {
-    date: 'Jan 2026',
-    title: 'Connection Workflow Improvements',
-    description: 'Sent requests can be canceled and pending requests are highlighted in navigation.'
+    title: 'News Tab For Everyone',
+    description: 'The News tab is available even when logged out, so updates are always visible.'
   }
 ];
 
@@ -433,6 +501,12 @@ function showSearch() {
 function showProfile() {
   currentView.value = 'profile';
   isMenuOpen.value = false;
+}
+
+function showEventLog() {
+  currentView.value = 'events';
+  isMenuOpen.value = false;
+  loadEventLog();
 }
 
 function showNews() {
@@ -567,6 +641,7 @@ function logout() {
   pendingRequests.value = [];
   sentRequests.value = [];
   selectedMoods.value = {};
+  eventLogItems.value = [];
   profileCurrentPassword.value = '';
   profileNewPassword.value = '';
   profileConfirmPassword.value = '';
@@ -610,6 +685,16 @@ async function changePassword() {
   } finally {
     isPasswordBusy.value = false;
   }
+}
+
+async function loadEventLog() {
+  const res = await apiFetch(`/api/events?limit=${eventLogLimit.value}&direction=${eventLogDirection.value}`);
+  if (!res) return;
+  if (!res.ok) {
+    showToast('Failed to load event log.', 'error');
+    return;
+  }
+  eventLogItems.value = (await res.json()) as EventLogItemDTO[];
 }
 
 async function loadPartners() {
@@ -928,6 +1013,33 @@ function getMoodEmoji(mood: Mood) {
   }
 }
 
+function getMoodLabel(mood: Mood) {
+  switch (mood) {
+    case 'happy':
+      return 'Happy';
+    case 'sad':
+      return 'Sad';
+    case 'angry':
+      return 'Angry';
+    case 'love':
+      return 'Love';
+    case 'excited':
+      return 'Excited';
+    case 'worried':
+      return 'Worried';
+    case 'grateful':
+      return 'Grateful';
+    case 'none':
+      return 'Neutral';
+    default:
+      return 'Neutral';
+  }
+}
+
+function formatEventTime(occurredAt: string) {
+  return new Date(occurredAt).toLocaleString();
+}
+
 async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
   if (!token.value) {
     return null;
@@ -1003,5 +1115,13 @@ interface NewsItem {
   date: string;
   title: string;
   description: string;
+}
+
+interface EventLogItemDTO {
+  connectionId: string;
+  partnerUsername: string;
+  direction: 'sent' | 'received';
+  mood: Mood;
+  occurredAt: string;
 }
 </script>

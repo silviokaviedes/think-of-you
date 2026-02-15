@@ -11,4 +11,8 @@ public interface ThoughtEventRepository extends MongoRepository<ThoughtEvent, St
     List<ThoughtEvent> findByConnectionIdAndRecipientIdAndOccurredAtBetween(String connectionId, String recipientId, Instant start, Instant end);
     Optional<ThoughtEvent> findFirstByConnectionIdAndRecipientIdOrderByOccurredAtDesc(String connectionId, String recipientId);
     Optional<ThoughtEvent> findFirstByConnectionIdAndSenderIdOrderByOccurredAtDesc(String connectionId, String senderId);
+    List<ThoughtEvent> findTop200BySenderIdOrderByOccurredAtDesc(String senderId);
+    List<ThoughtEvent> findTop200ByRecipientIdOrderByOccurredAtDesc(String recipientId);
+    List<ThoughtEvent> findTop200ByConnectionIdAndSenderIdOrderByOccurredAtDesc(String connectionId, String senderId);
+    List<ThoughtEvent> findTop200ByConnectionIdAndRecipientIdOrderByOccurredAtDesc(String connectionId, String recipientId);
 }
