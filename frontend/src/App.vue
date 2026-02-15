@@ -42,6 +42,7 @@
           </button>
           <button class="nav-btn" :class="{ active: currentView === 'search' }" @click="showSearch">Search</button>
           <button class="nav-btn" :class="{ active: currentView === 'stats' }" @click="openStatsFromNav">Stats</button>
+          <button class="nav-btn" :class="{ active: currentView === 'profile' }" @click="showProfile">Profile</button>
         </div>
         <div id="user-info" :class="{ hidden: !isAuthenticated }">
           <span id="current-username">{{ currentUsername }}</span>
@@ -219,6 +220,24 @@
           </div>
         </div>
       </section>
+
+      <section id="profile-section" v-if="currentView === 'profile'">
+        <div class="card" style="max-width: 520px; margin: 0 auto;">
+          <div class="card-header">
+            <h2>Profile</h2>
+            <button class="close-btn" @click="showDashboard">Back</button>
+          </div>
+          <p style="color: var(--text-light); margin-bottom: 16px;">
+            Change your password for <strong>{{ currentUsername }}</strong>
+          </p>
+          <input v-model="profileCurrentPassword" type="password" placeholder="Current password" />
+          <input v-model="profileNewPassword" type="password" placeholder="New password" />
+          <input v-model="profileConfirmPassword" type="password" placeholder="Confirm new password" />
+          <div class="button-group" style="margin-top: 12px;">
+            <button :disabled="isPasswordBusy" @click="changePassword">Update password</button>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -244,7 +263,9 @@
     <button class="tab-btn" :class="{ active: currentView === 'stats' }" @click="openStatsFromNav">
       Stats
     </button>
-    <button class="tab-btn tab-disabled" disabled title="Coming soon">Profile</button>
+    <button class="tab-btn" :class="{ active: currentView === 'profile' }" @click="showProfile">
+      Profile
+    </button>
   </nav>
 </template>
 
@@ -260,7 +281,7 @@ const token = ref<string>(localStorage.getItem('token') ?? '');
 const currentUsername = ref<string>(localStorage.getItem('username') ?? '');
 const isAuthenticated = computed(() => Boolean(token.value));
 
-const currentView = ref<'auth' | 'dashboard' | 'search' | 'stats'>(
+const currentView = ref<'auth' | 'dashboard' | 'search' | 'stats' | 'profile'>(
   isAuthenticated.value ? 'dashboard' : 'auth'
 );
 const isMenuOpen = ref(false);
@@ -277,6 +298,11 @@ const selectedMoods = ref<Record<string, Mood>>({});
 const searchUsername = ref('');
 const searchResult = ref<string | null>(null);
 const searchNotFound = ref(false);
+
+const profileCurrentPassword = ref('');
+const profileNewPassword = ref('');
+const profileConfirmPassword = ref('');
+const isPasswordBusy = ref(false);
 
 const currentStatsConnectionId = ref<string>('');
 const statsTitle = ref('Statistics');
@@ -349,6 +375,11 @@ function showSearch() {
   isMenuOpen.value = false;
   searchResult.value = null;
   searchNotFound.value = false;
+}
+
+function showProfile() {
+  currentView.value = 'profile';
+  isMenuOpen.value = false;
 }
 
 function showStats(connectionId: string, partnerName: string) {
@@ -470,6 +501,49 @@ function logout() {
   pendingRequests.value = [];
   sentRequests.value = [];
   selectedMoods.value = {};
+  profileCurrentPassword.value = '';
+  profileNewPassword.value = '';
+  profileConfirmPassword.value = '';
+}
+
+async function changePassword() {
+  if (!profileCurrentPassword.value || !profileNewPassword.value || !profileConfirmPassword.value) {
+    showToast('Please fill in all password fields.', 'error');
+    return;
+  }
+  if (profileNewPassword.value !== profileConfirmPassword.value) {
+    showToast('New password and confirmation do not match.', 'error');
+    return;
+  }
+  if (profileCurrentPassword.value === profileNewPassword.value) {
+    showToast('New password must be different from current password.', 'error');
+    return;
+  }
+
+  isPasswordBusy.value = true;
+  try {
+    const res = await apiFetch('/api/users/password', {
+      method: 'POST',
+      body: JSON.stringify({
+        currentPassword: profileCurrentPassword.value,
+        newPassword: profileNewPassword.value
+      })
+    });
+    if (!res) return;
+
+    if (res.ok) {
+      profileCurrentPassword.value = '';
+      profileNewPassword.value = '';
+      profileConfirmPassword.value = '';
+      showToast('Password updated successfully.', 'success');
+      return;
+    }
+
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    showToast(body?.error ?? 'Failed to update password.', 'error');
+  } finally {
+    isPasswordBusy.value = false;
+  }
 }
 
 async function loadPartners() {

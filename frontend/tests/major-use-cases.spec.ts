@@ -159,3 +159,39 @@ test('User can view mood statistics for a connection', async ({ page, request })
   await expect(moodItem).toBeVisible();
   await expect(moodItem.locator('.mood-count')).toHaveText('1');
 });
+
+test('User can change password from profile', async ({ page }) => {
+  const username = uniqueUser('profile-user');
+  const oldPassword = 'Passw0rd!';
+  const newPassword = 'NewPassw0rd!';
+
+  await page.goto('/');
+  await page.getByPlaceholder('Username').fill(username);
+  await page.getByPlaceholder('Password').fill(oldPassword);
+  await page.getByRole('button', { name: 'Register' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Registered successfully');
+
+  await page.getByRole('button', { name: 'Login' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Welcome back');
+
+  await page.getByRole('button', { name: 'Profile' }).first().click();
+  await expect(page.locator('#profile-section')).toBeVisible();
+
+  await page.getByPlaceholder('Current password').fill(oldPassword);
+  await page.getByPlaceholder('New password', { exact: true }).fill(newPassword);
+  await page.getByPlaceholder('Confirm new password').fill(newPassword);
+  await page.getByRole('button', { name: 'Update password' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Password updated successfully');
+
+  await page.getByRole('button', { name: 'Logout' }).click();
+  await expect(page.locator('#auth-section')).toBeVisible();
+
+  await page.getByPlaceholder('Username').fill(username);
+  await page.getByPlaceholder('Password').fill(oldPassword);
+  await page.getByRole('button', { name: 'Login' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Login failed');
+
+  await page.getByPlaceholder('Password').fill(newPassword);
+  await page.getByRole('button', { name: 'Login' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Welcome back');
+});

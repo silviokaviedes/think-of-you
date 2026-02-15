@@ -91,4 +91,30 @@ class AuthServiceTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Invalid password");
     }
+
+    @Test
+    void changePassword_updatesHashWhenCurrentPasswordValid() {
+        User user = new User("alice", "old-hash");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("old-secret", "old-hash")).thenReturn(true);
+        when(passwordEncoder.matches("new-secret", "old-hash")).thenReturn(false);
+        when(passwordEncoder.encode("new-secret")).thenReturn("new-hash");
+
+        authService.changePassword("alice", "old-secret", "new-secret");
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getPasswordHash()).isEqualTo("new-hash");
+    }
+
+    @Test
+    void changePassword_throwsWhenCurrentPasswordInvalid() {
+        User user = new User("alice", "old-hash");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrong-secret", "old-hash")).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.changePassword("alice", "wrong-secret", "new-secret"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Current password is invalid");
+    }
 }
