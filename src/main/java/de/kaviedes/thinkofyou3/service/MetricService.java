@@ -32,6 +32,7 @@ public class MetricService {
     public Map<String, Long> getMetrics(String connectionId, String username, Instant from, Instant to, int bucketMinutes, String direction) {
         Connection c = connectionRepository.findById(connectionId).orElseThrow();
         User user = userRepository.findByUsername(username).orElseThrow();
+        ensureUserIsConnectionParticipant(c, user);
 
         String senderId = null;
         String recipientId = null;
@@ -74,6 +75,7 @@ public class MetricService {
     public MoodMetricsDTO getMoodMetrics(String connectionId, String username, Instant from, Instant to, int bucketMinutes, String direction) {
         Connection c = connectionRepository.findById(connectionId).orElseThrow();
         User user = userRepository.findByUsername(username).orElseThrow();
+        ensureUserIsConnectionParticipant(c, user);
 
         String senderId = null;
         String recipientId = null;
@@ -126,5 +128,13 @@ public class MetricService {
             ));
 
         return new MoodMetricsDTO(moodBuckets, totalMoodDistribution);
+    }
+
+    private void ensureUserIsConnectionParticipant(Connection connection, User user) {
+        boolean isRequester = user.getId().equals(connection.getRequesterId());
+        boolean isRecipient = user.getId().equals(connection.getRecipientId());
+        if (!isRequester && !isRecipient) {
+            throw new RuntimeException("Unauthorized");
+        }
     }
 }

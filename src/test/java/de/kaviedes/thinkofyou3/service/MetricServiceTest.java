@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -85,5 +86,41 @@ class MetricServiceTest {
 
         assertThat(result.getTotalMoodDistribution().get(Mood.GRATEFUL)).isEqualTo(1L);
         assertThat(result.getTimeBuckets().get("2024-01-01T00:00:00Z").get(Mood.GRATEFUL)).isEqualTo(1L);
+    }
+
+    @Test
+    void getMetrics_throwsWhenUserNotInConnection() {
+        Connection connection = new Connection("u1", "u2");
+        connection.setId("c1");
+        User outsider = new User("mallory", "hash");
+        outsider.setId("u3");
+
+        Instant from = Instant.parse("2024-01-01T00:00:00Z");
+        Instant to = Instant.parse("2024-01-01T01:00:00Z");
+
+        when(connectionRepository.findById("c1")).thenReturn(Optional.of(connection));
+        when(userRepository.findByUsername("mallory")).thenReturn(Optional.of(outsider));
+
+        assertThatThrownBy(() -> metricService.getMetrics("c1", "mallory", from, to, 60, "received"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Unauthorized");
+    }
+
+    @Test
+    void getMoodMetrics_throwsWhenUserNotInConnection() {
+        Connection connection = new Connection("u1", "u2");
+        connection.setId("c1");
+        User outsider = new User("mallory", "hash");
+        outsider.setId("u3");
+
+        Instant from = Instant.parse("2024-01-01T00:00:00Z");
+        Instant to = Instant.parse("2024-01-01T01:00:00Z");
+
+        when(connectionRepository.findById("c1")).thenReturn(Optional.of(connection));
+        when(userRepository.findByUsername("mallory")).thenReturn(Optional.of(outsider));
+
+        assertThatThrownBy(() -> metricService.getMoodMetrics("c1", "mallory", from, to, 60, "received"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Unauthorized");
     }
 }
