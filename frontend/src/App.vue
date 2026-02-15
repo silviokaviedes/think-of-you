@@ -348,14 +348,8 @@
     <button class="tab-btn" :class="{ active: currentView === 'stats' }" @click="openStatsFromNav">
       Stats
     </button>
-    <button class="tab-btn" :class="{ active: currentView === 'profile' }" @click="showProfile">
-      Profile
-    </button>
     <button class="tab-btn" :class="{ active: currentView === 'events' }" @click="showEventLog">
       Event Log
-    </button>
-    <button class="tab-btn" :class="{ active: currentView === 'news' }" @click="showNews">
-      News
     </button>
   </nav>
 </template>
