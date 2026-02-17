@@ -257,3 +257,60 @@ test('User can view event log timeline with configurable amount', async ({ page,
   await page.locator('#event-log-section').locator('select').first().selectOption('10');
   await expect(page.locator('#event-log-section')).toContainText('Sent');
 });
+
+test('User can configure favorite emojis and see them on dashboard', async ({ page, request }) => {
+  const userA = uniqueUser('emoji-a');
+  const userB = uniqueUser('emoji-b');
+
+  await registerUser(request, userA, password);
+  await registerUser(request, userB, password);
+
+  const userAAuth = await loginUser(request, userA, password);
+  const userBAuth = await loginUser(request, userB, password);
+
+  await request.post('/api/connections/request', {
+    data: { username: userB },
+    headers: { Authorization: `Bearer ${userAAuth.token}` }
+  });
+
+  const pendingRes = await request.get('/api/connections/requests', {
+    headers: { Authorization: `Bearer ${userBAuth.token}` }
+  });
+  const pending = (await pendingRes.json()) as Array<{ id: string; partnerUsername: string }>;
+  const match = pending.find((item) => item.partnerUsername === userA);
+  expect(match).toBeTruthy();
+
+  await request.post(`/api/connections/${match!.id}/accept`, {
+    headers: { Authorization: `Bearer ${userBAuth.token}` }
+  });
+
+  await loginViaStorage(page, userAAuth.token, userAAuth.username);
+  const partnerCard = page.locator('.partner-card').filter({ hasText: userB });
+  await expect(partnerCard).toBeVisible();
+  await expect(partnerCard.getByRole('button', { name: 'Exhausted' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Profile' }).first().click();
+  await expect(page.locator('#profile-section')).toBeVisible();
+
+  const neutralPreference = page
+    .locator('#profile-section .mood-options')
+    .getByRole('button', { name: 'Neutral' });
+  await neutralPreference.click();
+
+  const exhaustedPreference = page
+    .locator('#profile-section .mood-options')
+    .getByRole('button', { name: 'Exhausted' });
+  await exhaustedPreference.click();
+  await page.getByRole('button', { name: 'Save emoji preferences' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Emoji preferences saved.');
+
+  await page.locator('#profile-section').getByRole('button', { name: 'Back' }).click();
+  await expect(page.locator('#dashboard-section')).toBeVisible();
+  await expect(partnerCard.getByRole('button', { name: 'Exhausted' })).toBeVisible();
+
+  await page.reload();
+  await expect(page.locator('#dashboard-section')).toBeVisible();
+  await expect(
+    page.locator('.partner-card').filter({ hasText: userB }).getByRole('button', { name: 'Exhausted' })
+  ).toBeVisible();
+});

@@ -211,16 +211,9 @@ public class ConnectionService {
     }
     
     private String getMoodEmoji(Mood mood) {
-        switch (mood) {
-            case HAPPY: return "😊";
-            case SAD: return "😢";
-            case ANGRY: return "😠";
-            case LOVE: return "❤️";
-            case EXCITED: return "🤗";
-            case WORRIED: return "😟";
-            case GRATEFUL: return "🙏";
-            case NONE: return "💭";
-            default: return "💭";
+        if (mood == null) {
+            return Mood.NONE.getEmoji();
         }
+        return mood.getEmoji();
     }
 }

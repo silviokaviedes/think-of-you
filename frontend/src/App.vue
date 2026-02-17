@@ -111,7 +111,7 @@
                   @click="selectMood(option.value, partner.id)"
                 >
                   <span class="mood-emoji">{{ option.emoji }}</span>
-                  <span class="mood-text">{{ option.text }}</span>
+                  <span class="mood-text">{{ option.label }}</span>
                 </button>
               </div>
             </div>
@@ -246,6 +246,27 @@
           <div class="button-group" style="margin-top: 12px;">
             <button :disabled="isPasswordBusy" @click="changePassword">Update password</button>
           </div>
+          <div style="margin-top: 20px;">
+            <h3 style="margin-bottom: 8px;">Favorite emojis for dashboard</h3>
+            <p style="color: var(--text-light); margin-bottom: 12px;">
+              Choose up to {{ maxFavoriteMoods }} emojis. These are shown when sending a thought.
+            </p>
+            <div class="mood-options">
+              <button
+                v-for="option in moodCatalog"
+                :key="`pref-${option.value}`"
+                class="mood-btn"
+                :class="{ selected: favoriteMoods.includes(option.value) }"
+                @click="toggleFavoriteMood(option.value)"
+              >
+                <span class="mood-emoji">{{ option.emoji }}</span>
+                <span class="mood-text">{{ option.label }}</span>
+              </button>
+            </div>
+            <div class="button-group" style="margin-top: 12px;">
+              <button :disabled="isMoodPreferencesBusy" @click="saveMoodPreferences">Save emoji preferences</button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -378,7 +399,7 @@ const isAuthBusy = ref(false);
 const partners = ref<ConnectionDTO[]>([]);
 const pendingRequests = ref<ConnectionDTO[]>([]);
 const sentRequests = ref<ConnectionDTO[]>([]);
-const selectedMoods = ref<Record<string, Mood>>({});
+const selectedMoods = ref<Record<string, string>>({});
 
 const searchUsername = ref('');
 const searchResult = ref<string | null>(null);
@@ -388,6 +409,7 @@ const profileCurrentPassword = ref('');
 const profileNewPassword = ref('');
 const profileConfirmPassword = ref('');
 const isPasswordBusy = ref(false);
+const isMoodPreferencesBusy = ref(false);
 
 const currentStatsConnectionId = ref<string>('');
 const statsTitle = ref('Statistics');
@@ -408,7 +430,41 @@ let toastId = 0;
 let stompClient: Client | null = null;
 let pushInitialized = false;
 
+const DEFAULT_MOOD_CATALOG: MoodOption[] = [
+  { value: 'happy', emoji: '\uD83D\uDE0A', label: 'Happy' },
+  { value: 'sad', emoji: '\uD83D\uDE22', label: 'Sad' },
+  { value: 'angry', emoji: '\uD83D\uDE20', label: 'Angry' },
+  { value: 'love', emoji: '\u2764\uFE0F', label: 'Love' },
+  { value: 'excited', emoji: '\uD83E\uDD73', label: 'Excited' },
+  { value: 'worried', emoji: '\uD83D\uDE1F', label: 'Worried' },
+  { value: 'grateful', emoji: '\uD83D\uDE4F', label: 'Grateful' },
+  { value: 'none', emoji: '\uD83D\uDCAD', label: 'Neutral' },
+  { value: 'hug', emoji: '\uD83E\uDD17', label: 'Hug' },
+  { value: 'exhausted', emoji: '\uD83D\uDE2E\u200D\uD83D\uDCA8', label: 'Exhausted' },
+  { value: 'calm', emoji: '\uD83D\uDE0C', label: 'Calm' },
+  { value: 'playful', emoji: '\uD83D\uDE1C', label: 'Playful' },
+  { value: 'confused', emoji: '\uD83D\uDE15', label: 'Confused' },
+  { value: 'proud', emoji: '\uD83D\uDE0E', label: 'Proud' },
+  { value: 'shy', emoji: '\uD83E\uDD7A', label: 'Shy' },
+  { value: 'sick', emoji: '\uD83E\uDD12', label: 'Sick' },
+  { value: 'stressed', emoji: '\uD83D\uDE35', label: 'Stressed' },
+  { value: 'hopeful', emoji: '\uD83C\uDF1F', label: 'Hopeful' },
+  { value: 'celebrating', emoji: '\uD83C\uDF89', label: 'Celebrating' },
+  { value: 'lonely', emoji: '\uD83D\uDE14', label: 'Lonely' }
+];
+
+const DEFAULT_FAVORITE_MOODS = ['love', 'hug', 'happy', 'grateful', 'excited', 'calm', 'worried', 'none'];
+const moodCatalog = ref<MoodOption[]>([...DEFAULT_MOOD_CATALOG]);
+const favoriteMoods = ref<string[]>([...DEFAULT_FAVORITE_MOODS]);
+const maxFavoriteMoods = ref(8);
+
 const hasPendingRequests = computed(() => pendingRequests.value.length > 0);
+const moodLookup = computed<Record<string, MoodOption>>(() => {
+  return moodCatalog.value.reduce<Record<string, MoodOption>>((acc, mood) => {
+    acc[mood.value] = mood;
+    return acc;
+  }, {});
+});
 const newsItems: NewsItem[] = [
   {
     date: 'Feb 2026',
@@ -437,16 +493,13 @@ const newsItems: NewsItem[] = [
   }
 ];
 
-const moodOptions: MoodOption[] = [
-  { value: 'happy', emoji: getMoodEmoji('happy'), text: 'Happy' },
-  { value: 'love', emoji: getMoodEmoji('love'), text: 'Love' },
-  { value: 'sad', emoji: getMoodEmoji('sad'), text: 'Sad' },
-  { value: 'angry', emoji: getMoodEmoji('angry'), text: 'Angry' },
-  { value: 'excited', emoji: getMoodEmoji('excited'), text: 'Excited' },
-  { value: 'worried', emoji: getMoodEmoji('worried'), text: 'Worried' },
-  { value: 'grateful', emoji: getMoodEmoji('grateful'), text: 'Grateful' },
-  { value: 'none', emoji: getMoodEmoji('none'), text: 'Neutral' }
-];
+const moodOptions = computed<MoodOption[]>(() => {
+  const normalizedFavorites = favoriteMoods.value.filter((value) => moodLookup.value[value]);
+  const source = normalizedFavorites.length ? normalizedFavorites : DEFAULT_FAVORITE_MOODS;
+  return source
+    .map((value) => moodLookup.value[value])
+    .filter((value): value is MoodOption => Boolean(value));
+});
 
 const moodSummary = computed(() => {
   const distribution = statsData.value?.totalMoodDistribution ?? {};
@@ -455,22 +508,24 @@ const moodSummary = computed(() => {
     .sort((a, b) => b[1] - a[1]);
 
   return entries.map(([name, count]) => {
-    const mood = name.toLowerCase() as Mood;
+    const mood = name.toLowerCase();
+    const moodOption = moodLookup.value[mood];
     return {
       name,
-      label: mood.charAt(0).toUpperCase() + mood.slice(1),
+      label: moodOption?.label ?? mood.charAt(0).toUpperCase() + mood.slice(1),
       emoji: getMoodEmoji(mood),
       count
     };
   });
 });
 
-onMounted(() => {
+onMounted(async () => {
   if (isAuthenticated.value) {
+    await loadMoodPreferences();
     showDashboard();
     connectWebSocket();
     // Initialize push only on native platforms and once per session.
-    setupPushNotifications();
+    await setupPushNotifications();
   }
 });
 
@@ -581,10 +636,11 @@ async function login() {
       currentUsername.value = data.username;
       localStorage.setItem('token', token.value);
       localStorage.setItem('username', currentUsername.value);
+      await loadMoodPreferences();
       showDashboard();
       connectWebSocket();
       // Attempt push registration right after login.
-      setupPushNotifications();
+      await setupPushNotifications();
       showToast(`Welcome back, ${currentUsername.value}!`, 'success');
     } else {
       showToast('Login failed. Please check your credentials.', 'error');
@@ -639,6 +695,9 @@ function logout() {
   profileCurrentPassword.value = '';
   profileNewPassword.value = '';
   profileConfirmPassword.value = '';
+  moodCatalog.value = [...DEFAULT_MOOD_CATALOG];
+  favoriteMoods.value = [...DEFAULT_FAVORITE_MOODS];
+  maxFavoriteMoods.value = 8;
 }
 
 async function changePassword() {
@@ -681,6 +740,62 @@ async function changePassword() {
   }
 }
 
+function toggleFavoriteMood(moodValue: string) {
+  const existingIndex = favoriteMoods.value.indexOf(moodValue);
+  if (existingIndex >= 0) {
+    if (favoriteMoods.value.length === 1) {
+      showToast('Keep at least one favorite emoji.', 'error');
+      return;
+    }
+    favoriteMoods.value = favoriteMoods.value.filter((value) => value !== moodValue);
+    return;
+  }
+
+  if (favoriteMoods.value.length >= maxFavoriteMoods.value) {
+    showToast(`You can choose up to ${maxFavoriteMoods.value} emojis.`, 'error');
+    return;
+  }
+
+  favoriteMoods.value = [...favoriteMoods.value, moodValue];
+}
+
+async function loadMoodPreferences() {
+  const res = await apiFetch('/api/users/preferences/moods');
+  if (!res || !res.ok) {
+    return;
+  }
+
+  const data = (await res.json()) as UserMoodPreferencesDTO;
+  moodCatalog.value = data.availableMoods?.length ? data.availableMoods : [...DEFAULT_MOOD_CATALOG];
+  maxFavoriteMoods.value = data.maxFavorites ?? 8;
+
+  const validFavoriteMoods = (data.favoriteMoods ?? []).filter((mood) =>
+    moodCatalog.value.some((option) => option.value === mood)
+  );
+  favoriteMoods.value = validFavoriteMoods.length ? validFavoriteMoods : [...DEFAULT_FAVORITE_MOODS];
+}
+
+async function saveMoodPreferences() {
+  isMoodPreferencesBusy.value = true;
+  try {
+    const res = await apiFetch('/api/users/preferences/moods', {
+      method: 'PUT',
+      body: JSON.stringify({ favoriteMoods: favoriteMoods.value })
+    });
+    if (!res) return;
+
+    if (res.ok) {
+      showToast('Emoji preferences saved.', 'success');
+      return;
+    }
+
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    showToast(body?.error ?? 'Failed to save emoji preferences.', 'error');
+  } finally {
+    isMoodPreferencesBusy.value = false;
+  }
+}
+
 async function loadEventLog() {
   const res = await apiFetch(`/api/events?limit=${eventLogLimit.value}&direction=${eventLogDirection.value}`);
   if (!res) return;
@@ -700,7 +815,7 @@ async function loadPartners() {
 
   data.forEach((partner) => {
     if (!selectedMoods.value[partner.id]) {
-      selectedMoods.value[partner.id] = 'none';
+      selectedMoods.value[partner.id] = favoriteMoods.value[0] ?? 'none';
     }
   });
 }
@@ -790,7 +905,7 @@ async function think(id: string) {
   showToast(`Sent a thought ${getMoodEmoji(mood)}!`, 'success');
 }
 
-function selectMood(mood: Mood, connectionId: string) {
+function selectMood(mood: string, connectionId: string) {
   selectedMoods.value[connectionId] = mood;
 }
 
@@ -936,25 +1051,22 @@ function renderChart() {
     return date.toLocaleDateString();
   });
 
-  const moodColors: Record<Mood, string> = {
-    happy: '#FFD700',
-    sad: '#4169E1',
-    angry: '#FF4500',
-    love: '#FF69B4',
-    excited: '#FFA500',
-    worried: '#9370DB',
-    grateful: '#32CD32',
-    none: '#808080'
-  };
-
-  const moods: Mood[] = ['happy', 'sad', 'angry', 'love', 'excited', 'worried', 'grateful', 'none'];
+  const moodPalette = [
+    '#FFD700', '#4169E1', '#FF4500', '#FF69B4', '#FFA500',
+    '#9370DB', '#32CD32', '#808080', '#00B894', '#6C5CE7',
+    '#2D3436', '#E17055', '#0984E3', '#00CEC9', '#FDCB6E',
+    '#D63031', '#636E72', '#74B9FF', '#A29BFE', '#55EFC4'
+  ];
+  const moods = moodCatalog.value.map((item) => item.value);
 
   const datasets = moods.map((mood) => {
-    const values = Object.values(statsData.value!.timeBuckets).map((bucket) => bucket[mood] || 0);
+    const values = Object.values(statsData.value!.timeBuckets).map((bucket) => bucket[mood] ?? 0);
+    const moodOption = moodLookup.value[mood];
+    const colorIndex = moods.indexOf(mood) % moodPalette.length;
     return {
-      label: `${getMoodEmoji(mood)} ${mood.charAt(0).toUpperCase() + mood.slice(1)}`,
+      label: `${getMoodEmoji(mood)} ${moodOption?.label ?? mood}`,
       data: values,
-      backgroundColor: moodColors[mood],
+      backgroundColor: moodPalette[colorIndex],
       borderRadius: 2
     };
   });
@@ -984,50 +1096,12 @@ function renderChart() {
   });
 }
 
-function getMoodEmoji(mood: Mood) {
-  switch (mood) {
-    case 'happy':
-      return '\uD83D\uDE0A';
-    case 'sad':
-      return '\uD83D\uDE22';
-    case 'angry':
-      return '\uD83D\uDE20';
-    case 'love':
-      return '\u2764\uFE0F';
-    case 'excited':
-      return '\uD83E\uDD17';
-    case 'worried':
-      return '\uD83D\uDE1F';
-    case 'grateful':
-      return '\uD83D\uDE4F';
-    case 'none':
-      return '\uD83D\uDCAD';
-    default:
-      return '\uD83D\uDCAD';
-  }
+function getMoodEmoji(mood: string) {
+  return moodLookup.value[mood]?.emoji ?? '\uD83D\uDCAD';
 }
 
-function getMoodLabel(mood: Mood) {
-  switch (mood) {
-    case 'happy':
-      return 'Happy';
-    case 'sad':
-      return 'Sad';
-    case 'angry':
-      return 'Angry';
-    case 'love':
-      return 'Love';
-    case 'excited':
-      return 'Excited';
-    case 'worried':
-      return 'Worried';
-    case 'grateful':
-      return 'Grateful';
-    case 'none':
-      return 'Neutral';
-    default:
-      return 'Neutral';
-  }
+function getMoodLabel(mood: string) {
+  return moodLookup.value[mood]?.label ?? 'Neutral';
 }
 
 function formatEventTime(occurredAt: string) {
@@ -1072,11 +1146,11 @@ interface ConnectionDTO {
   receivedClicks: number;
   sentClicks: number;
   status: string;
-  lastReceivedMood?: Mood | null;
-  lastSentMood?: Mood | null;
+  lastReceivedMood?: string | null;
+  lastSentMood?: string | null;
 }
 
-type Mood = 'happy' | 'sad' | 'angry' | 'love' | 'excited' | 'worried' | 'grateful' | 'none';
+type Mood = string;
 
 interface MoodMetricsDTO {
   timeBuckets: Record<string, Record<Mood, number>>;
@@ -1100,9 +1174,9 @@ interface ToastItem {
 type ToastType = 'info' | 'success' | 'error';
 
 interface MoodOption {
-  value: Mood;
+  value: string;
   emoji: string;
-  text: string;
+  label: string;
 }
 
 interface NewsItem {
@@ -1115,7 +1189,13 @@ interface EventLogItemDTO {
   connectionId: string;
   partnerUsername: string;
   direction: 'sent' | 'received';
-  mood: Mood;
+  mood: string;
   occurredAt: string;
+}
+
+interface UserMoodPreferencesDTO {
+  availableMoods: MoodOption[];
+  favoriteMoods: string[];
+  maxFavorites: number;
 }
 </script>

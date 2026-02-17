@@ -200,17 +200,9 @@ public class PushNotificationService {
      * @return emoji string
      */
     private String getMoodEmoji(Mood mood) {
-        return switch (mood) {
-            case HAPPY -> "ðŸ˜Š";
-            case SAD -> "ðŸ˜¢";
-            case ANGRY -> "ðŸ˜ ";
-            case LOVE -> "â¤ï¸";
-            case EXCITED -> "ðŸ¤—";
-            case WORRIED -> "ðŸ˜Ÿ";
-            case GRATEFUL -> "ðŸ™";
-            case NONE -> "ðŸ’­";
-        };
+        if (mood == null) {
+            return Mood.NONE.getEmoji();
+        }
+        return mood.getEmoji();
     }
-
-    
 }

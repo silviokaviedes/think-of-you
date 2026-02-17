@@ -3,6 +3,7 @@ package de.kaviedes.thinkofyou3.controller;
 import de.kaviedes.thinkofyou3.model.User;
 import de.kaviedes.thinkofyou3.security.JwtFilter;
 import de.kaviedes.thinkofyou3.service.AuthService;
+import de.kaviedes.thinkofyou3.service.UserPreferenceService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,9 @@ class UserControllerTest {
 
     @MockBean
     private JwtFilter jwtFilter;
+
+    @MockBean
+    private UserPreferenceService userPreferenceService;
 
     @Test
     void search_returnsUserWhenFound() throws Exception {
@@ -85,5 +89,32 @@ class UserControllerTest {
                         .content("{\"currentPassword\":\"wrong\",\"newPassword\":\"new-secret\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Current password is invalid"));
+    }
+
+    @Test
+    void getMoodPreferences_returnsData() throws Exception {
+        var response = new de.kaviedes.thinkofyou3.dto.UserMoodPreferencesDTO(
+                java.util.List.of(new de.kaviedes.thinkofyou3.dto.MoodOptionDTO("hug", "🤗", "Hug")),
+                java.util.List.of("hug"),
+                8
+        );
+        when(userPreferenceService.getMoodPreferences("alice")).thenReturn(response);
+
+        mockMvc.perform(get("/api/users/preferences/moods")
+                        .principal(new UsernamePasswordAuthenticationToken("alice", "n/a")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.favoriteMoods[0]").value("hug"))
+                .andExpect(jsonPath("$.availableMoods[0].emoji").value("🤗"));
+    }
+
+    @Test
+    void updateMoodPreferences_returnsOk() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/users/preferences/moods")
+                        .principal(new UsernamePasswordAuthenticationToken("alice", "n/a"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"favoriteMoods\":[\"hug\",\"exhausted\"]}"))
+                .andExpect(status().isOk());
+
+        verify(userPreferenceService).updateFavoriteMoods("alice", java.util.List.of("hug", "exhausted"));
     }
 }
