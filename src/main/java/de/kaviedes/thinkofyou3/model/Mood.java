@@ -14,7 +14,7 @@ public enum Mood {
     WORRIED("worried", "\uD83D\uDE1F", "Worried"),
     GRATEFUL("grateful", "\uD83D\uDE4F", "Grateful"),
     NONE("none", "\uD83D\uDCAD", "Neutral"),
-    HUG("hug", "\uD83E\uDD17", "Hug"),
+    HUG("hug", "\uD83E\uDEC2", "Hug"),
     EXHAUSTED("exhausted", "\uD83D\uDE2E\u200D\uD83D\uDCA8", "Exhausted"),
     CALM("calm", "\uD83D\uDE0C", "Calm"),
     PLAYFUL("playful", "\uD83D\uDE1C", "Playful"),

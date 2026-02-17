@@ -439,7 +439,7 @@ const DEFAULT_MOOD_CATALOG: MoodOption[] = [
   { value: 'worried', emoji: '\uD83D\uDE1F', label: 'Worried' },
   { value: 'grateful', emoji: '\uD83D\uDE4F', label: 'Grateful' },
   { value: 'none', emoji: '\uD83D\uDCAD', label: 'Neutral' },
-  { value: 'hug', emoji: '\uD83E\uDD17', label: 'Hug' },
+  { value: 'hug', emoji: '\uD83E\uDEC2', label: 'Hug' },
   { value: 'exhausted', emoji: '\uD83D\uDE2E\u200D\uD83D\uDCA8', label: 'Exhausted' },
   { value: 'calm', emoji: '\uD83D\uDE0C', label: 'Calm' },
   { value: 'playful', emoji: '\uD83D\uDE1C', label: 'Playful' },
@@ -466,6 +466,16 @@ const moodLookup = computed<Record<string, MoodOption>>(() => {
   }, {});
 });
 const newsItems: NewsItem[] = [
+  {
+    date: 'Feb 2026',
+    title: 'New People Hug Emoji',
+    description: 'Hug now uses the two-people emoji so it better represents connection.'
+  },
+  {
+    date: 'Feb 2026',
+    title: 'Emoji Favorites Are Configurable',
+    description: 'Choose your dashboard favorites from a larger mood-emoji catalog in Profile.'
+  },
   {
     date: 'Feb 2026',
     title: 'Event Log Timeline Added',
