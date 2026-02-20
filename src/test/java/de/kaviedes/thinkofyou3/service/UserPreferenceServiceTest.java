@@ -47,4 +47,27 @@ class UserPreferenceServiceTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Unknown mood");
     }
+
+    @Test
+    void getDashboardPreference_defaultsToCounts() {
+        User user = new User("alice", "hash");
+        user.setDashboardDisplayMode(null);
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+
+        var result = userPreferenceService.getDashboardPreference("alice");
+
+        assertThat(result.getMode()).isEqualTo("counts");
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void updateDashboardPreference_savesLastEventMode() {
+        User user = new User("alice", "hash");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+
+        var result = userPreferenceService.updateDashboardPreference("alice", "last_event");
+
+        assertThat(result.getMode()).isEqualTo("last_event");
+        verify(userRepository).save(any(User.class));
+    }
 }

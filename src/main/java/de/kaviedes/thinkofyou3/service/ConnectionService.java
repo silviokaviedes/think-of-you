@@ -191,19 +191,33 @@ public class ConnectionService {
         int sent = c.getRequesterId().equals(userId) ? c.getRequesterToRecipientCount() : c.getRecipientToRequesterCount();
         int received = c.getRequesterId().equals(userId) ? c.getRecipientToRequesterCount() : c.getRequesterToRecipientCount();
 
-        // Find the last received mood
-        Mood lastReceivedMood = thoughtEventRepository
+        ThoughtEvent lastReceivedEvent = thoughtEventRepository
                 .findFirstByConnectionIdAndRecipientIdOrderByOccurredAtDesc(c.getId(), userId)
-                .map(event -> event.getMood() != null ? event.getMood() : Mood.NONE)
                 .orElse(null);
 
-        // Find the last sent mood
-        Mood lastSentMood = thoughtEventRepository
+        ThoughtEvent lastSentEvent = thoughtEventRepository
                 .findFirstByConnectionIdAndSenderIdOrderByOccurredAtDesc(c.getId(), userId)
-                .map(event -> event.getMood() != null ? event.getMood() : Mood.NONE)
                 .orElse(null);
 
-        return new ConnectionDTO(c.getId(), partner.getUsername(), received, sent, c.getStatus(), lastReceivedMood, lastSentMood);
+        Mood lastReceivedMood = lastReceivedEvent != null && lastReceivedEvent.getMood() != null
+                ? lastReceivedEvent.getMood() : null;
+        Mood lastSentMood = lastSentEvent != null && lastSentEvent.getMood() != null
+                ? lastSentEvent.getMood() : null;
+
+        Instant lastReceivedAt = lastReceivedEvent != null ? lastReceivedEvent.getOccurredAt() : null;
+        Instant lastSentAt = lastSentEvent != null ? lastSentEvent.getOccurredAt() : null;
+
+        return new ConnectionDTO(
+                c.getId(),
+                partner.getUsername(),
+                received,
+                sent,
+                c.getStatus(),
+                lastReceivedMood,
+                lastSentMood,
+                lastReceivedAt,
+                lastSentAt
+        );
     }
 
     private void notifyUpdate(String username) {

@@ -16,6 +16,7 @@ public class User {
     private String username;
     private String passwordHash;
     private List<String> favoriteMoods;
+    private DashboardDisplayMode dashboardDisplayMode;
     private Instant createdAt;
 
     public User() {}
@@ -24,6 +25,7 @@ public class User {
         this.username = username;
         this.passwordHash = passwordHash;
         this.favoriteMoods = new ArrayList<>(Mood.defaultFavorites());
+        this.dashboardDisplayMode = DashboardDisplayMode.COUNTS;
         this.createdAt = Instant.now();
     }
 
@@ -35,6 +37,8 @@ public class User {
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public List<String> getFavoriteMoods() { return favoriteMoods; }
     public void setFavoriteMoods(List<String> favoriteMoods) { this.favoriteMoods = favoriteMoods; }
+    public DashboardDisplayMode getDashboardDisplayMode() { return dashboardDisplayMode; }
+    public void setDashboardDisplayMode(DashboardDisplayMode dashboardDisplayMode) { this.dashboardDisplayMode = dashboardDisplayMode; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

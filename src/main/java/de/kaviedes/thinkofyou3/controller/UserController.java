@@ -1,7 +1,9 @@
 package de.kaviedes.thinkofyou3.controller;
 
 import de.kaviedes.thinkofyou3.dto.ChangePasswordRequest;
+import de.kaviedes.thinkofyou3.dto.DashboardPreferenceDTO;
 import de.kaviedes.thinkofyou3.dto.UpdateFavoriteMoodsRequest;
+import de.kaviedes.thinkofyou3.dto.UpdateDashboardPreferenceRequest;
 import de.kaviedes.thinkofyou3.dto.UserMoodPreferencesDTO;
 import de.kaviedes.thinkofyou3.model.User;
 import de.kaviedes.thinkofyou3.service.AuthService;
@@ -58,6 +60,22 @@ public class UserController {
         try {
             userPreferenceService.updateFavoriteMoods(auth.getName(), request.getFavoriteMoods());
             return ResponseEntity.ok().build();
+        } catch (RuntimeException ex) {
+            Map<String, String> body = new HashMap<>();
+            body.put("error", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        }
+    }
+
+    @GetMapping("/preferences/dashboard")
+    public ResponseEntity<DashboardPreferenceDTO> getDashboardPreference(Authentication auth) {
+        return ResponseEntity.ok(userPreferenceService.getDashboardPreference(auth.getName()));
+    }
+
+    @PutMapping("/preferences/dashboard")
+    public ResponseEntity<?> updateDashboardPreference(@RequestBody UpdateDashboardPreferenceRequest request, Authentication auth) {
+        try {
+            return ResponseEntity.ok(userPreferenceService.updateDashboardPreference(auth.getName(), request.getMode()));
         } catch (RuntimeException ex) {
             Map<String, String> body = new HashMap<>();
             body.put("error", ex.getMessage());

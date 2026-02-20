@@ -117,4 +117,30 @@ class UserControllerTest {
 
         verify(userPreferenceService).updateFavoriteMoods("alice", java.util.List.of("hug", "exhausted"));
     }
+
+    @Test
+    void getDashboardPreference_returnsMode() throws Exception {
+        var response = new de.kaviedes.thinkofyou3.dto.DashboardPreferenceDTO("last_event");
+        when(userPreferenceService.getDashboardPreference("alice")).thenReturn(response);
+
+        mockMvc.perform(get("/api/users/preferences/dashboard")
+                        .principal(new UsernamePasswordAuthenticationToken("alice", "n/a")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mode").value("last_event"));
+    }
+
+    @Test
+    void updateDashboardPreference_returnsOk() throws Exception {
+        when(userPreferenceService.updateDashboardPreference("alice", "last_event"))
+                .thenReturn(new de.kaviedes.thinkofyou3.dto.DashboardPreferenceDTO("last_event"));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/users/preferences/dashboard")
+                        .principal(new UsernamePasswordAuthenticationToken("alice", "n/a"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"mode\":\"last_event\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mode").value("last_event"));
+
+        verify(userPreferenceService).updateDashboardPreference("alice", "last_event");
+    }
 }

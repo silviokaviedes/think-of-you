@@ -86,16 +86,34 @@
             <div class="stats-grid">
               <div class="stat-item">
                 <span class="stat-label">Received</span>
-                <span class="stat-value">{{ partner.receivedClicks }}</span>
-                <span v-if="partner.lastReceivedMood && partner.lastReceivedMood !== 'none'" class="last-mood">
-                  {{ getMoodEmoji(partner.lastReceivedMood) }}
+                <template v-if="dashboardDisplayMode === 'counts'">
+                  <span class="stat-value">{{ partner.receivedClicks }}</span>
+                  <span v-if="partner.lastReceivedMood && partner.lastReceivedMood !== 'none'" class="last-mood">
+                    {{ getMoodEmoji(partner.lastReceivedMood) }}
+                  </span>
+                </template>
+                <span v-else class="stat-detail">
+                  <template v-if="partner.lastReceivedAt">
+                    <span class="stat-value">{{ getMoodEmoji(partner.lastReceivedMood ?? 'none') }}</span>
+                    <span class="stat-time">{{ formatEventTime(partner.lastReceivedAt) }}</span>
+                  </template>
+                  <template v-else>No events yet</template>
                 </span>
               </div>
               <div class="stat-item">
                 <span class="stat-label">Sent</span>
-                <span class="stat-value">{{ partner.sentClicks }}</span>
-                <span v-if="partner.lastSentMood && partner.lastSentMood !== 'none'" class="last-mood">
-                  {{ getMoodEmoji(partner.lastSentMood) }}
+                <template v-if="dashboardDisplayMode === 'counts'">
+                  <span class="stat-value">{{ partner.sentClicks }}</span>
+                  <span v-if="partner.lastSentMood && partner.lastSentMood !== 'none'" class="last-mood">
+                    {{ getMoodEmoji(partner.lastSentMood) }}
+                  </span>
+                </template>
+                <span v-else class="stat-detail">
+                  <template v-if="partner.lastSentAt">
+                    <span class="stat-value">{{ getMoodEmoji(partner.lastSentMood ?? 'none') }}</span>
+                    <span class="stat-time">{{ formatEventTime(partner.lastSentAt) }}</span>
+                  </template>
+                  <template v-else>No events yet</template>
                 </span>
               </div>
             </div>
@@ -245,6 +263,21 @@
           <input v-model="profileConfirmPassword" type="password" placeholder="Confirm new password" />
           <div class="button-group" style="margin-top: 12px;">
             <button :disabled="isPasswordBusy" @click="changePassword">Update password</button>
+          </div>
+          <div style="margin-top: 20px;">
+            <h3 style="margin-bottom: 8px;">Dashboard event display</h3>
+            <p style="color: var(--text-light); margin-bottom: 12px;">
+              Choose whether dashboard cards show total counts or only the latest event date/time + emoji.
+            </p>
+            <select v-model="dashboardDisplayMode" style="width: 100%; margin-bottom: 12px;">
+              <option value="counts">Show total sent/received counts</option>
+              <option value="last_event">Show only last event timestamp + emoji</option>
+            </select>
+            <div class="button-group" style="margin-top: 12px;">
+              <button :disabled="isDashboardPreferenceBusy" @click="saveDashboardPreference">
+                Save dashboard view
+              </button>
+            </div>
           </div>
           <div style="margin-top: 20px;">
             <h3 style="margin-bottom: 8px;">Favorite emojis for dashboard</h3>
@@ -410,6 +443,8 @@ const profileNewPassword = ref('');
 const profileConfirmPassword = ref('');
 const isPasswordBusy = ref(false);
 const isMoodPreferencesBusy = ref(false);
+const isDashboardPreferenceBusy = ref(false);
+const dashboardDisplayMode = ref<DashboardDisplayMode>('counts');
 
 const currentStatsConnectionId = ref<string>('');
 const statsTitle = ref('Statistics');
@@ -466,6 +501,11 @@ const moodLookup = computed<Record<string, MoodOption>>(() => {
   }, {});
 });
 const newsItems: NewsItem[] = [
+  {
+    date: 'Feb 2026',
+    title: 'New No-pressure Mode',
+    description: 'You can now switch dashboard cards to show only the latest event time + emoji instead of totals.'
+  },
   {
     date: 'Feb 2026',
     title: 'New People Hug Emoji',
@@ -532,6 +572,7 @@ const moodSummary = computed(() => {
 onMounted(async () => {
   if (isAuthenticated.value) {
     await loadMoodPreferences();
+    await loadDashboardPreference();
     showDashboard();
     connectWebSocket();
     // Initialize push only on native platforms and once per session.
@@ -647,6 +688,7 @@ async function login() {
       localStorage.setItem('token', token.value);
       localStorage.setItem('username', currentUsername.value);
       await loadMoodPreferences();
+      await loadDashboardPreference();
       showDashboard();
       connectWebSocket();
       // Attempt push registration right after login.
@@ -708,6 +750,7 @@ function logout() {
   moodCatalog.value = [...DEFAULT_MOOD_CATALOG];
   favoriteMoods.value = [...DEFAULT_FAVORITE_MOODS];
   maxFavoriteMoods.value = 8;
+  dashboardDisplayMode.value = 'counts';
 }
 
 async function changePassword() {
@@ -783,6 +826,39 @@ async function loadMoodPreferences() {
     moodCatalog.value.some((option) => option.value === mood)
   );
   favoriteMoods.value = validFavoriteMoods.length ? validFavoriteMoods : [...DEFAULT_FAVORITE_MOODS];
+}
+
+async function loadDashboardPreference() {
+  const res = await apiFetch('/api/users/preferences/dashboard');
+  if (!res || !res.ok) {
+    return;
+  }
+
+  const data = (await res.json()) as DashboardPreferenceDTO;
+  dashboardDisplayMode.value = data.mode === 'last_event' ? 'last_event' : 'counts';
+}
+
+async function saveDashboardPreference() {
+  isDashboardPreferenceBusy.value = true;
+  try {
+    const res = await apiFetch('/api/users/preferences/dashboard', {
+      method: 'PUT',
+      body: JSON.stringify({ mode: dashboardDisplayMode.value })
+    });
+    if (!res) return;
+
+    if (res.ok) {
+      const data = (await res.json()) as DashboardPreferenceDTO;
+      dashboardDisplayMode.value = data.mode === 'last_event' ? 'last_event' : 'counts';
+      showToast('Dashboard view preference saved.', 'success');
+      return;
+    }
+
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    showToast(body?.error ?? 'Failed to save dashboard view preference.', 'error');
+  } finally {
+    isDashboardPreferenceBusy.value = false;
+  }
 }
 
 async function saveMoodPreferences() {
@@ -1158,6 +1234,8 @@ interface ConnectionDTO {
   status: string;
   lastReceivedMood?: string | null;
   lastSentMood?: string | null;
+  lastReceivedAt?: string | null;
+  lastSentAt?: string | null;
 }
 
 type Mood = string;
@@ -1207,5 +1285,11 @@ interface UserMoodPreferencesDTO {
   availableMoods: MoodOption[];
   favoriteMoods: string[];
   maxFavorites: number;
+}
+
+type DashboardDisplayMode = 'counts' | 'last_event';
+
+interface DashboardPreferenceDTO {
+  mode: DashboardDisplayMode;
 }
 </script>

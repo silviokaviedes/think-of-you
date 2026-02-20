@@ -1,7 +1,9 @@
 package de.kaviedes.thinkofyou3.service;
 
+import de.kaviedes.thinkofyou3.dto.DashboardPreferenceDTO;
 import de.kaviedes.thinkofyou3.dto.MoodOptionDTO;
 import de.kaviedes.thinkofyou3.dto.UserMoodPreferencesDTO;
+import de.kaviedes.thinkofyou3.model.DashboardDisplayMode;
 import de.kaviedes.thinkofyou3.model.Mood;
 import de.kaviedes.thinkofyou3.model.User;
 import de.kaviedes.thinkofyou3.repository.UserRepository;
@@ -47,6 +49,29 @@ public class UserPreferenceService {
         return normalized;
     }
 
+    public DashboardPreferenceDTO getDashboardPreference(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        DashboardDisplayMode mode = normalizeDashboardMode(user.getDashboardDisplayMode());
+        if (user.getDashboardDisplayMode() != mode) {
+            user.setDashboardDisplayMode(mode);
+            userRepository.save(user);
+        }
+
+        return new DashboardPreferenceDTO(mode.getValue());
+    }
+
+    public DashboardPreferenceDTO updateDashboardPreference(String username, String modeValue) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        DashboardDisplayMode mode = DashboardDisplayMode.fromValue(modeValue);
+        user.setDashboardDisplayMode(mode);
+        userRepository.save(user);
+        return new DashboardPreferenceDTO(mode.getValue());
+    }
+
     private List<String> normalizeFavoriteMoods(List<String> favoriteMoods) {
         List<String> incoming = favoriteMoods == null ? Mood.defaultFavorites() : favoriteMoods;
         Set<String> allowedValues = Arrays.stream(Mood.values())
@@ -77,5 +102,9 @@ public class UserPreferenceService {
         return Arrays.stream(Mood.values())
                 .map(mood -> new MoodOptionDTO(mood.getValue(), mood.getEmoji(), mood.getLabel()))
                 .toList();
+    }
+
+    private DashboardDisplayMode normalizeDashboardMode(DashboardDisplayMode mode) {
+        return mode == null ? DashboardDisplayMode.COUNTS : mode;
     }
 }

@@ -12,6 +12,7 @@ A web application for couples (including polyamorous relationships) to non-verba
 - **Mood Analytics**: Stacked bar charts showing mood patterns and summary statistics for emotional insights.
 - **Per-Connection Stats Switching**: Switch the statistics view between partners.
 - **Last Mood Indicators**: See the most recent received and sent mood emoji per connection.
+- **Dashboard Display Preference**: Switch dashboard cards between count totals and last event timestamp + emoji.
 - **Responsive Design**: Works on Desktop, Tablet, and Mobile with a burger menu and bottom tab navigation.
 
 ## Architecture
@@ -177,6 +178,10 @@ For instructions on how to deploy this application to production easily, see the
 - `GET /api/metrics?connectionId=...&from=...&to=...&bucketMinutes=...&direction=received|sent`: Get statistics
 - `GET /api/metrics/moods?connectionId=...&from=...&to=...&bucketMinutes=...&direction=received|sent`: Get mood-based statistics with distribution data
 - `POST /api/push/register`: { token, platform } - Register device token for push notifications
+- `GET /api/users/preferences/moods`: Get available moods + user's favorite mood buttons
+- `PUT /api/users/preferences/moods`: { favoriteMoods } - Update favorite mood buttons (max 8)
+- `GET /api/users/preferences/dashboard`: Get dashboard display mode (`counts` or `last_event`)
+- `PUT /api/users/preferences/dashboard`: { mode } - Update dashboard display mode
 
 ## Environment Variables
 - `MONGO_HOST`: Hostname of the MongoDB server (default: localhost).
@@ -192,6 +197,11 @@ For instructions on how to deploy this application to production easily, see the
 - **Smooth Animations**: CSS transitions for menu toggle with transform effects
 - **Accessible Design**: Proper ARIA labels and semantic HTML structure
 - **Touch-Friendly**: Large tap targets optimized for mobile interaction
+
+### Dashboard Card Modes
+- **Counts Mode**: Shows total sent and received counts per connection.
+- **Last Event Mode**: Hides totals and shows only the latest event timestamp and emoji for sent/received.
+- **Profile Control**: Each user can switch this behavior from the Profile page.
 
 ### Design System
 - **Modern Glass-morphism**: Frosted glass effect with backdrop blur
@@ -254,7 +264,7 @@ The application features a comprehensive notification system for real-time engag
 - **Real-time Notifications**: WebSocket-based live updates when someone thinks of you, with mood context
 - **Bidirectional Notifications**: Both sender and receiver receive immediate feedback for every interaction
 - **Thought Tracking**: Click counter to track "thinking of you" interactions between partners
-- **Mood Expression**: Add emotional context to thoughts with 8 different mood options
+- **Mood Expression**: Add emotional context to thoughts with a larger emoji set and configurable favorites
 - **Relationship Analytics**: View statistics of thought exchanges over customizable time periods
 - **Mood Analytics**: Visualize emotional patterns with stacked bar charts and mood distribution summaries
 - **Multi-partner Support**: Supports polyamorous relationships with multiple simultaneous connections
@@ -270,11 +280,12 @@ The application features a comprehensive notification system for real-time engag
 
 ### Data Models
 - **User**: Stores username, password hash, and creation timestamp
+- **User Preferences**: Stores favorite moods and dashboard display mode (`counts` or `last_event`)
 - **Connection**: Manages relationship status between users with bidirectional counters
 - **ThoughtEvent**: Logs individual "thinking of you" events with timestamps and mood
-- **Mood**: Enum with 8 emotional states (happy, sad, angry, love, excited, worried, grateful, none)
+- **Mood**: Enum with an expanded mood set (including hug and exhausted)
 - **MoodMetricsDTO**: Data transfer object containing time-bucketed mood distributions and total mood counts
-- **ConnectionDTO**: Includes last received and last sent mood for dashboard indicators
+- **ConnectionDTO**: Includes counts, last sent/received mood, and last sent/received timestamp
 
 ### Security Features
 - Password hashing with Spring Security
