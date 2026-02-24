@@ -417,6 +417,7 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 
 const token = ref<string>(localStorage.getItem('token') ?? '');
+const refreshToken = ref<string>(localStorage.getItem('refreshToken') ?? '');
 const currentUsername = ref<string>(localStorage.getItem('username') ?? '');
 const isAuthenticated = computed(() => Boolean(token.value));
 
@@ -464,6 +465,7 @@ let toastId = 0;
 
 let stompClient: Client | null = null;
 let pushInitialized = false;
+let refreshInFlight: Promise<boolean> | null = null;
 
 const DEFAULT_MOOD_CATALOG: MoodOption[] = [
   { value: 'happy', emoji: '\uD83D\uDE0A', label: 'Happy' },
@@ -570,6 +572,16 @@ const moodSummary = computed(() => {
 });
 
 onMounted(async () => {
+  const hasStoredSession = isAuthenticated.value || Boolean(refreshToken.value);
+  if (hasStoredSession) {
+    const restored = await bootstrapSession();
+    if (!restored) {
+      logout(false);
+      showToast('Session expired. Please log in again.', 'error');
+      return;
+    }
+  }
+
   if (isAuthenticated.value) {
     await loadMoodPreferences();
     await loadDashboardPreference();
@@ -683,10 +695,7 @@ async function login() {
 
     if (res.ok) {
       const data = (await res.json()) as AuthResponse;
-      token.value = data.token;
-      currentUsername.value = data.username;
-      localStorage.setItem('token', token.value);
-      localStorage.setItem('username', currentUsername.value);
+      persistSession(data);
       await loadMoodPreferences();
       await loadDashboardPreference();
       showDashboard();
@@ -732,12 +741,22 @@ async function register() {
   }
 }
 
-function logout() {
-  localStorage.clear();
+function logout(callServer = true) {
+  if (callServer && refreshToken.value) {
+    fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: refreshToken.value })
+    }).catch((error) => console.error(error));
+  }
+
+  clearSessionStorage();
   token.value = '';
+  refreshToken.value = '';
   currentUsername.value = '';
   disconnectWebSocket();
   pushInitialized = false;
+  refreshInFlight = null;
   currentView.value = 'auth';
   partners.value = [];
   pendingRequests.value = [];
@@ -1209,7 +1228,22 @@ async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
   try {
     const res = await fetch(input, { ...init, headers });
     if (res.status === 401) {
-      logout();
+      const refreshed = await tryRefreshSession();
+      if (refreshed) {
+        const retryHeaders = new Headers(init.headers ?? {});
+        retryHeaders.set('Authorization', `Bearer ${token.value}`);
+
+        if (init.body && !retryHeaders.has('Content-Type')) {
+          retryHeaders.set('Content-Type', 'application/json');
+        }
+
+        const retryRes = await fetch(input, { ...init, headers: retryHeaders });
+        if (retryRes.status !== 401) {
+          return retryRes;
+        }
+      }
+
+      logout(false);
       showToast('Session expired. Please log in again.', 'error');
       return null;
     }
@@ -1221,9 +1255,99 @@ async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
   }
 }
 
+async function bootstrapSession() {
+  if (!token.value && refreshToken.value) {
+    return tryRefreshSession();
+  }
+  if (token.value && !refreshToken.value) {
+    return validateAccessToken();
+  }
+  if (!token.value) {
+    return false;
+  }
+  return true;
+}
+
+async function validateAccessToken() {
+  if (!token.value) {
+    return false;
+  }
+
+  try {
+    const res = await fetch('/api/connections', {
+      headers: { Authorization: `Bearer ${token.value}` }
+    });
+    return res.ok;
+  } catch (error) {
+    console.error(error);
+    return true;
+  }
+}
+
+async function tryRefreshSession() {
+  if (!refreshToken.value) {
+    return false;
+  }
+
+  if (refreshInFlight) {
+    return refreshInFlight;
+  }
+
+  refreshInFlight = refreshAccessToken().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+async function refreshAccessToken() {
+  if (!refreshToken.value) {
+    return false;
+  }
+
+  try {
+    const res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: refreshToken.value })
+    });
+
+    if (!res.ok) {
+      return false;
+    }
+
+    const data = (await res.json()) as AuthResponse;
+    persistSession(data);
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
+function persistSession(data: AuthResponse) {
+  token.value = data.token;
+  currentUsername.value = data.username;
+  if (data.refreshToken) {
+    refreshToken.value = data.refreshToken;
+  }
+
+  localStorage.setItem('token', token.value);
+  localStorage.setItem('username', currentUsername.value);
+  if (refreshToken.value) {
+    localStorage.setItem('refreshToken', refreshToken.value);
+  }
+}
+
+function clearSessionStorage() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('username');
+}
+
 interface AuthResponse {
   token: string;
   username: string;
+  refreshToken?: string;
 }
 
 interface ConnectionDTO {

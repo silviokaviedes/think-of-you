@@ -111,7 +111,29 @@ If you prefer to run everything locally without Docker:
 - The Vue frontend uses Vite for hot reload and proxies API/WebSocket traffic
 - Backend changes require a restart of the Spring Boot application
 - Default MongoDB connection is to `localhost:27017`
-- JWT tokens are stored in localStorage for development
+- Access and refresh tokens are stored in localStorage for development
+
+## Authentication and Session Lifecycle
+
+The app uses short-lived access tokens plus long-lived refresh tokens.
+
+- Access token: JWT used in `Authorization: Bearer ...` for API calls.
+- Refresh token: opaque random token used to silently mint a new access token.
+- Access token lifetime: 24 hours.
+- Refresh token lifetime: 60 days.
+- Refresh token rotation: every successful refresh returns a new refresh token and revokes the old one.
+- Logout: revokes the current refresh token.
+- Password change: revokes all active refresh tokens for that user.
+
+### Client behavior
+- On login, client stores `token`, `username`, and `refreshToken`.
+- On app start, if only `refreshToken` is available, client calls `POST /api/auth/refresh` and restores session automatically.
+- On `401`, client tries one silent refresh and retries the original request once before forcing login.
+
+### Persistence compatibility
+- Existing collections (`users`, `connections`, `thought_events`, etc.) are unchanged.
+- Session persistence uses a new collection: `refresh_tokens`.
+- No migration is required for existing databases.
 
 ### Frontend (Vue 3 + TypeScript)
 The frontend source lives in `frontend/` and is built into `src/main/resources/static`.
@@ -166,7 +188,9 @@ For instructions on how to deploy this application to production easily, see the
 
 ## API Documentation
 - `POST /api/auth/register`: { username, password }
-- `POST /api/auth/login`: { username, password } -> returns JWT
+- `POST /api/auth/login`: { username, password } -> returns `{ token, username, refreshToken }`
+- `POST /api/auth/refresh`: { refreshToken } -> returns rotated `{ token, username, refreshToken }`
+- `POST /api/auth/logout`: { refreshToken } -> revokes refresh token
 - `GET /api/users/search?username=...`: Search for a user
 - `POST /api/connections/request`: { username } - Request a connection
 - `GET /api/connections`: Get accepted partners

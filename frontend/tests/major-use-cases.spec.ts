@@ -62,6 +62,18 @@ test('Logged out user can open News tab', async ({ page }) => {
   await expect(page.locator('#auth-section')).toBeVisible();
 });
 
+test('User with invalid stored token is redirected to login', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('token', 'invalid-token-value');
+    window.localStorage.setItem('username', 'ghost-user');
+    window.localStorage.removeItem('refreshToken');
+  });
+
+  await page.goto('/');
+  await expect(page.locator('#auth-section')).toBeVisible();
+  await expect(page.locator('#toast-container')).toContainText('Session expired');
+});
+
 test('User can search and send a connection request', async ({ page, request }) => {
   const requester = uniqueUser('requester');
   const recipient = uniqueUser('recipient');

@@ -1,7 +1,9 @@
 package de.kaviedes.thinkofyou3.service;
 
 import de.kaviedes.thinkofyou3.dto.LoginRequest;
+import de.kaviedes.thinkofyou3.model.RefreshToken;
 import de.kaviedes.thinkofyou3.model.User;
+import de.kaviedes.thinkofyou3.repository.RefreshTokenRepository;
 import de.kaviedes.thinkofyou3.repository.UserRepository;
 import de.kaviedes.thinkofyou3.security.JwtUtil;
 import org.junit.jupiter.api.Test;
@@ -12,11 +14,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,6 +29,9 @@ class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private RefreshTokenRepository refreshTokenRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -76,6 +84,7 @@ class AuthServiceTest {
 
         assertThat(response.getUsername()).isEqualTo("alice");
         assertThat(response.getToken()).isEqualTo("token123");
+        assertThat(response.getRefreshToken()).isNotBlank();
     }
 
     @Test
@@ -93,12 +102,34 @@ class AuthServiceTest {
     }
 
     @Test
+    void refresh_rotatesRefreshTokenAndReturnsNewAccessToken() {
+        User user = new User("alice", "hash");
+        user.setId("u1");
+
+        RefreshToken stored = new RefreshToken("u1", "hashed-old-token", java.time.Instant.now().plusSeconds(60));
+
+        when(refreshTokenRepository.findByTokenHashAndRevokedFalseAndExpiresAtAfter(any(), any()))
+                .thenReturn(Optional.of(stored));
+        when(userRepository.findById("u1")).thenReturn(Optional.of(user));
+        when(jwtUtil.generateToken("alice")).thenReturn("token123");
+
+        var response = authService.refresh("raw-refresh-token");
+
+        assertThat(response.getToken()).isEqualTo("token123");
+        assertThat(response.getUsername()).isEqualTo("alice");
+        assertThat(response.getRefreshToken()).isNotBlank();
+        verify(refreshTokenRepository, atLeast(2)).save(any(RefreshToken.class));
+    }
+
+    @Test
     void changePassword_updatesHashWhenCurrentPasswordValid() {
         User user = new User("alice", "old-hash");
+        user.setId("u1");
         when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("old-secret", "old-hash")).thenReturn(true);
         when(passwordEncoder.matches("new-secret", "old-hash")).thenReturn(false);
         when(passwordEncoder.encode("new-secret")).thenReturn("new-hash");
+        when(refreshTokenRepository.findByUserIdAndRevokedFalse("u1")).thenReturn(List.of());
 
         authService.changePassword("alice", "old-secret", "new-secret");
 
