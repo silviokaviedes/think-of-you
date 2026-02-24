@@ -505,6 +505,11 @@ const moodLookup = computed<Record<string, MoodOption>>(() => {
 const newsItems: NewsItem[] = [
   {
     date: 'Feb 2026',
+    title: 'Stay Logged In Improvements',
+    description: 'Sessions now restore automatically with refresh tokens, and invalid sessions redirect cleanly to login.'
+  },
+  {
+    date: 'Feb 2026',
     title: 'New No-pressure Mode',
     description: 'You can now switch dashboard cards to show only the latest event time + emoji instead of totals.'
   },
