@@ -80,7 +80,15 @@
           <h2>My People</h2>
         </div>
 
-        <div id="partners-list" class="partners-grid">
+        <div
+          v-if="isDashboardLoading"
+          class="card"
+          style="text-align: center; color: var(--text-light);"
+        >
+          Loading your connections...
+        </div>
+
+        <div v-if="!isDashboardLoading" id="partners-list" class="partners-grid">
           <div v-for="partner in partners" :key="partner.id" class="partner-card">
             <h3>{{ partner.partnerUsername }}</h3>
             <div class="stats-grid">
@@ -142,12 +150,15 @@
           </div>
         </div>
 
-        <div id="no-partners" :class="{ hidden: partners.length !== 0 }">
+        <div
+          id="no-partners"
+          :class="{ hidden: isDashboardLoading || !dashboardDataLoaded || partners.length !== 0 }"
+        >
           <p>No partners yet.</p>
           <button @click="showSearch">Find someone</button>
         </div>
 
-        <div id="pending-requests" :class="{ hidden: pendingRequests.length === 0 }">
+        <div id="pending-requests" :class="{ hidden: isDashboardLoading || pendingRequests.length === 0 }">
           <h3>Waiting to connect</h3>
           <div id="requests-list">
             <div v-for="request in pendingRequests" :key="request.id" class="request-item">
@@ -160,7 +171,7 @@
           </div>
         </div>
 
-        <div id="sent-requests" :class="{ hidden: sentRequests.length === 0 }">
+        <div id="sent-requests" :class="{ hidden: isDashboardLoading || sentRequests.length === 0 }">
           <h3>Sent Requests</h3>
           <div id="sent-requests-list">
             <div v-for="request in sentRequests" :key="request.id" class="request-item">
@@ -434,6 +445,8 @@ const partners = ref<ConnectionDTO[]>([]);
 const pendingRequests = ref<ConnectionDTO[]>([]);
 const sentRequests = ref<ConnectionDTO[]>([]);
 const selectedMoods = ref<Record<string, string>>({});
+const isDashboardLoading = ref(false);
+const dashboardDataLoaded = ref(false);
 
 const searchUsername = ref('');
 const searchResult = ref<string | null>(null);
@@ -503,6 +516,11 @@ const moodLookup = computed<Record<string, MoodOption>>(() => {
   }, {});
 });
 const newsItems: NewsItem[] = [
+  {
+    date: 'Feb 2026',
+    title: 'Dashboard Loading Indicator',
+    description: 'The dashboard now shows a loading message while connections are fetched, so empty states are clearer.'
+  },
   {
     date: 'Feb 2026',
     title: 'Stay Logged In Improvements',
@@ -604,8 +622,7 @@ function toggleMenu() {
 function showDashboard() {
   currentView.value = 'dashboard';
   isMenuOpen.value = false;
-  loadPartners();
-  loadRequests();
+  void loadDashboardData(true);
 }
 
 function showSearch() {
@@ -767,6 +784,8 @@ function logout(callServer = true) {
   pendingRequests.value = [];
   sentRequests.value = [];
   selectedMoods.value = {};
+  isDashboardLoading.value = false;
+  dashboardDataLoaded.value = false;
   eventLogItems.value = [];
   profileCurrentPassword.value = '';
   profileNewPassword.value = '';
@@ -1017,6 +1036,21 @@ async function think(id: string) {
 
 function selectMood(mood: string, connectionId: string) {
   selectedMoods.value[connectionId] = mood;
+}
+
+async function loadDashboardData(withIndicator = false) {
+  if (withIndicator) {
+    isDashboardLoading.value = true;
+  }
+
+  try {
+    await Promise.all([loadPartners(), loadRequests()]);
+  } finally {
+    dashboardDataLoaded.value = true;
+    if (withIndicator) {
+      isDashboardLoading.value = false;
+    }
+  }
 }
 
 function connectWebSocket() {
