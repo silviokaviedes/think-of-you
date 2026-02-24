@@ -622,7 +622,7 @@ function toggleMenu() {
 function showDashboard() {
   currentView.value = 'dashboard';
   isMenuOpen.value = false;
-  void loadDashboardData(true);
+  void loadDashboardData(!dashboardDataLoaded.value);
 }
 
 function showSearch() {
