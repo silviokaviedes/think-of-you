@@ -427,6 +427,14 @@ import Chart from 'chart.js/auto';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 
+const configuredApiBaseUrl = typeof import.meta.env.VITE_API_BASE_URL === 'string'
+  ? import.meta.env.VITE_API_BASE_URL.trim().replace(/\/$/, '')
+  : '';
+const nativeApiBaseUrl = Capacitor.getPlatform() === 'android' ? 'http://10.0.2.2:8080' : '';
+const apiBaseUrl = Capacitor.isNativePlatform()
+  ? configuredApiBaseUrl || nativeApiBaseUrl
+  : configuredApiBaseUrl;
+
 const token = ref<string>(localStorage.getItem('token') ?? '');
 const refreshToken = ref<string>(localStorage.getItem('refreshToken') ?? '');
 const currentUsername = ref<string>(localStorage.getItem('username') ?? '');
@@ -701,6 +709,23 @@ function clearToast(id: number) {
   toasts.value = toasts.value.filter((toast) => toast.id !== id);
 }
 
+function toApiUrl(path: string) {
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+  return apiBaseUrl ? `${apiBaseUrl}${path}` : path;
+}
+
+function toWebSocketUrl(path: string) {
+  if (/^wss?:\/\//i.test(path)) {
+    return path;
+  }
+  if (!apiBaseUrl) {
+    return path;
+  }
+  return `${apiBaseUrl.replace(/^http/i, 'ws')}${path}`;
+}
+
 async function login() {
   if (!authUsername.value || !authPassword.value) {
     showToast('Please enter credentials', 'error');
@@ -709,7 +734,7 @@ async function login() {
 
   isAuthBusy.value = true;
   try {
-    const res = await fetch('/api/auth/login', {
+    const res = await fetch(toApiUrl('/api/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: authUsername.value, password: authPassword.value })
@@ -744,7 +769,7 @@ async function register() {
 
   isAuthBusy.value = true;
   try {
-    const res = await fetch('/api/auth/register', {
+    const res = await fetch(toApiUrl('/api/auth/register'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: authUsername.value, password: authPassword.value })
@@ -765,7 +790,7 @@ async function register() {
 
 function logout(callServer = true) {
   if (callServer && refreshToken.value) {
-    fetch('/api/auth/logout', {
+    fetch(toApiUrl('/api/auth/logout'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken: refreshToken.value })
@@ -1057,7 +1082,7 @@ function connectWebSocket() {
   if (stompClient || !currentUsername.value) return;
 
   const client = new Client({
-    webSocketFactory: () => new SockJS('/ws'),
+    webSocketFactory: () => new SockJS(toWebSocketUrl('/ws')),
     reconnectDelay: 5000
   });
 
@@ -1265,7 +1290,7 @@ async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
   }
 
   try {
-    const res = await fetch(input, { ...init, headers });
+    const res = await fetch(toApiUrl(String(input)), { ...init, headers });
     if (res.status === 401) {
       const refreshed = await tryRefreshSession();
       if (refreshed) {
@@ -1276,7 +1301,7 @@ async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
           retryHeaders.set('Content-Type', 'application/json');
         }
 
-        const retryRes = await fetch(input, { ...init, headers: retryHeaders });
+        const retryRes = await fetch(toApiUrl(String(input)), { ...init, headers: retryHeaders });
         if (retryRes.status !== 401) {
           return retryRes;
         }
@@ -1313,7 +1338,7 @@ async function validateAccessToken() {
   }
 
   try {
-    const res = await fetch('/api/connections', {
+    const res = await fetch(toApiUrl('/api/connections'), {
       headers: { Authorization: `Bearer ${token.value}` }
     });
     return res.ok;
@@ -1344,7 +1369,7 @@ async function refreshAccessToken() {
   }
 
   try {
-    const res = await fetch('/api/auth/refresh', {
+    const res = await fetch(toApiUrl('/api/auth/refresh'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken: refreshToken.value })

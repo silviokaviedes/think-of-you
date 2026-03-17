@@ -198,7 +198,7 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [x] Add Capacitor dependencies to `frontend/package.json` and initialize Capacitor.
 - [x] Generate `capacitor.config.*` with app name + app ID.
 - [x] Build web assets and add Android platform (`frontend/android`).
-- [ ] Confirm Android Studio opens and Gradle sync completes.
+- [x] Confirm Android Studio opens and Gradle sync completes.
 
 ### B) Push notifications (client)
 - [x] Add `@capacitor/push-notifications` and sync Android project.
@@ -224,9 +224,31 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [ ] Complete Play Store listing assets (title, description, screenshots, feature graphic).
 
 ### F) Verification
-- [ ] Test login, connections, thoughts, stats in Android emulator/device.
-- [ ] Verify WebSocket updates work in foreground.
+- [ ] Test login, connections, thoughts, stats in Android emulator/device. Android emulator launch, login, dashboard access, and sending thoughts are working; connection list/state sync and stats still need explicit verification.
+- [ ] Verify WebSocket updates work in foreground. Current result: updates do not appear live until the user switches views / refreshes data.
 - [ ] Verify push notifications in background/closed state.
+
+---
+
+## Resume Here
+
+Current status after local emulator testing:
+- Android Studio project opens and Gradle sync completes.
+- Android app launches in the emulator.
+- Login from the Android emulator works against the local backend.
+- `google-services.json` has been added and the app no longer crashes during startup.
+- Dashboard opens successfully after login.
+- Sending a thought from the Android app works.
+- Foreground live updates via WebSocket are still not working correctly; the UI only reflects updates after switching views / refreshing data.
+
+Next exact steps:
+1. Investigate why foreground WebSocket updates do not refresh the Android dashboard in place.
+2. Re-test connection list/state sync after fixing the WebSocket/update issue.
+3. Verify the stats view on Android.
+4. Verify push notifications in background/closed state.
+5. Continue with release-readiness tasks only after the remaining Android verification items pass.
+
+If Android behavior regresses again, use Android Studio Logcat first and check for Capacitor, Chromium, Firebase, and WebSocket-related errors before changing code.
 
 ---
 
@@ -253,6 +275,7 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - In Firebase Console, add an **Android app** with package name `de.kaviedes.thinkofyou`.
 - Download `google-services.json` and place it here:
   - `frontend/android/app/google-services.json`
+- Status: added locally. Firebase-based app startup no longer crashes, but background/closed-state push delivery still needs verification.
 - Generate a **Service Account** in Firebase and export the JSON key.
   - Decide how you will store credentials in production:
     - `FIREBASE_SERVICE_ACCOUNT_BASE64` (base64‑encoded JSON)
@@ -280,6 +303,7 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
   ```
 - Wait for Gradle sync to complete.
 - Fix any missing SDK/Build Tools prompts in Android Studio.
+- Status: done locally. The next Android-side setup task is adding `frontend/android/app/google-services.json` and resyncing the project.
 
 #### 2.2 Signing key (required for Play Store)
 - Generate a **keystore** for release signing.
