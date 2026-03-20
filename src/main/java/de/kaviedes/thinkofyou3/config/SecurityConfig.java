@@ -31,7 +31,7 @@ public class SecurityConfig {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/index.html", "/css/**", "/js/**", "/", "/ws/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/index.html", "/css/**", "/js/**", "/", "/favicon.ico", "/error", "/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -50,19 +50,21 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
                 "http://localhost",
                 "http://10.0.2.2",
+                "https://think-of-you-production.up.railway.app",
                 "capacitor://localhost",
                 "ionic://localhost"
         ));
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
-                "http://10.0.2.2:*"
+                "http://10.0.2.2:*",
+                "https://*.up.railway.app"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/api/**", configuration);
         return source;
     }
 }

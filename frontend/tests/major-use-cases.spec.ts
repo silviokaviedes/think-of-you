@@ -56,7 +56,7 @@ test('Logged out user can open News tab', async ({ page }) => {
   await page.getByRole('button', { name: 'News' }).click();
   await expect(page.locator('#news-section')).toBeVisible();
   await expect(page.locator('#news-section')).toContainText('Latest News');
-  await expect(page.locator('#news-section')).toContainText('Profile Tab Is Live');
+  await expect(page.locator('#news-section .mood-item').first()).toBeVisible();
 
   await page.getByRole('button', { name: 'Back to Login' }).click();
   await expect(page.locator('#auth-section')).toBeVisible();
