@@ -420,7 +420,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import Chart from 'chart.js/auto';
@@ -485,8 +485,10 @@ const toasts = ref<ToastItem[]>([]);
 let toastId = 0;
 
 let stompClient: Client | null = null;
+let isWebSocketConnected = false;
 let pushInitialized = false;
 let refreshInFlight: Promise<boolean> | null = null;
+let lastNativeForegroundSyncAt = 0;
 
 const DEFAULT_MOOD_CATALOG: MoodOption[] = [
   { value: 'happy', emoji: '\uD83D\uDE0A', label: 'Happy' },
@@ -621,6 +623,15 @@ onMounted(async () => {
     // Initialize push only on native platforms and once per session.
     await setupPushNotifications();
   }
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('focus', handleWindowFocus);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  window.removeEventListener('focus', handleWindowFocus);
+  disconnectWebSocket();
 });
 
 function toggleMenu() {
@@ -705,8 +716,72 @@ function showToast(message: string, type: ToastType = 'info', sticky = false) {
   return id;
 }
 
+function debugLog(message: string, details?: Record<string, unknown>) {
+  const prefix = `[TOY debug ${new Date().toISOString()}]`;
+  if (details) {
+    console.log(prefix, message, details);
+    return;
+  }
+  console.log(prefix, message);
+}
+
 function clearToast(id: number) {
   toasts.value = toasts.value.filter((toast) => toast.id !== id);
+}
+
+function patchPartner(connectionId: string, updater: (partner: ConnectionDTO) => ConnectionDTO) {
+  partners.value = partners.value.map((partner) => {
+    if (partner.id !== connectionId) {
+      return partner;
+    }
+    return updater(partner);
+  });
+}
+
+function patchPartnerByUsername(partnerUsername: string, updater: (partner: ConnectionDTO) => ConnectionDTO) {
+  partners.value = partners.value.map((partner) => {
+    if (partner.partnerUsername !== partnerUsername) {
+      return partner;
+    }
+    return updater(partner);
+  });
+}
+
+function syncDashboardAfterForeground(forceReconnect = false) {
+  if (!Capacitor.isNativePlatform() || !isAuthenticated.value) {
+    return;
+  }
+
+  const now = Date.now();
+  if (now - lastNativeForegroundSyncAt < 5000) {
+    return;
+  }
+  lastNativeForegroundSyncAt = now;
+
+  debugLog('Foreground sync triggered', {
+    forceReconnect,
+    isWebSocketConnected,
+    currentView: currentView.value,
+    username: currentUsername.value
+  });
+
+  if (forceReconnect || !isWebSocketConnected) {
+    reconnectWebSocket();
+  }
+
+  void loadDashboardData(false);
+}
+
+function handleVisibilityChange() {
+  if (document.visibilityState === 'visible') {
+    debugLog('Document became visible');
+    syncDashboardAfterForeground(false);
+  }
+}
+
+function handleWindowFocus() {
+  debugLog('Window focus event received');
+  syncDashboardAfterForeground(false);
 }
 
 function toApiUrl(path: string) {
@@ -717,13 +792,13 @@ function toApiUrl(path: string) {
 }
 
 function toWebSocketUrl(path: string) {
-  if (/^wss?:\/\//i.test(path)) {
+  if (/^https?:\/\//i.test(path)) {
     return path;
   }
   if (!apiBaseUrl) {
     return path;
   }
-  return `${apiBaseUrl.replace(/^http/i, 'ws')}${path}`;
+  return `${apiBaseUrl}${path}`;
 }
 
 async function login() {
@@ -819,6 +894,7 @@ function logout(callServer = true) {
   favoriteMoods.value = [...DEFAULT_FAVORITE_MOODS];
   maxFavoriteMoods.value = 8;
   dashboardDisplayMode.value = 'counts';
+  lastNativeForegroundSyncAt = 0;
 }
 
 async function changePassword() {
@@ -961,11 +1037,26 @@ async function loadEventLog() {
 }
 
 async function loadPartners() {
+  debugLog('Loading partners', {
+    currentView: currentView.value,
+    partnerCount: partners.value.length
+  });
   const res = await apiFetch('/api/connections');
   if (!res) return;
   if (!res.ok) return;
   const data = (await res.json()) as ConnectionDTO[];
   partners.value = data;
+  debugLog('Partners loaded', {
+    partnerCount: data.length,
+    partners: data.map((partner) => ({
+      id: partner.id,
+      partnerUsername: partner.partnerUsername,
+      sentClicks: partner.sentClicks,
+      receivedClicks: partner.receivedClicks,
+      lastSentAt: partner.lastSentAt,
+      lastReceivedAt: partner.lastReceivedAt
+    }))
+  });
 
   data.forEach((partner) => {
     if (!selectedMoods.value[partner.id]) {
@@ -975,16 +1066,19 @@ async function loadPartners() {
 }
 
 async function loadRequests() {
+  debugLog('Loading requests');
   const res = await apiFetch('/api/connections/requests');
   if (!res) return;
   if (res.ok) {
     pendingRequests.value = (await res.json()) as ConnectionDTO[];
+    debugLog('Pending requests loaded', { count: pendingRequests.value.length });
   }
 
   const sentRes = await apiFetch('/api/connections/sent');
   if (!sentRes) return;
   if (sentRes.ok) {
     sentRequests.value = (await sentRes.json()) as ConnectionDTO[];
+    debugLog('Sent requests loaded', { count: sentRequests.value.length });
   }
 }
 
@@ -1042,6 +1136,11 @@ async function deleteConnection(id: string) {
 
 async function think(id: string) {
   const mood = selectedMoods.value[id] ?? 'none';
+  debugLog('Sending thought', {
+    connectionId: id,
+    mood,
+    username: currentUsername.value
+  });
   const res = await apiFetch(`/api/connections/${id}/think`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1049,13 +1148,21 @@ async function think(id: string) {
   });
   if (!res) return;
 
-  partners.value = partners.value.map((partner) => {
-    if (partner.id === id) {
-      return { ...partner, sentClicks: partner.sentClicks + 1 };
-    }
-    return partner;
+  const occurredAt = new Date().toISOString();
+  patchPartner(id, (partner) => {
+    return {
+      ...partner,
+      sentClicks: partner.sentClicks + 1,
+      lastSentMood: mood,
+      lastSentAt: occurredAt
+    };
   });
 
+  debugLog('Thought request succeeded', {
+    connectionId: id,
+    mood,
+    occurredAt
+  });
   showToast(`Sent a thought ${getMoodEmoji(mood)}!`, 'success');
 }
 
@@ -1064,6 +1171,10 @@ function selectMood(mood: string, connectionId: string) {
 }
 
 async function loadDashboardData(withIndicator = false) {
+  debugLog('Loading dashboard data', {
+    withIndicator,
+    currentView: currentView.value
+  });
   if (withIndicator) {
     isDashboardLoading.value = true;
   }
@@ -1072,6 +1183,12 @@ async function loadDashboardData(withIndicator = false) {
     await Promise.all([loadPartners(), loadRequests()]);
   } finally {
     dashboardDataLoaded.value = true;
+    debugLog('Dashboard data load finished', {
+      withIndicator,
+      partnerCount: partners.value.length,
+      pendingRequestCount: pendingRequests.value.length,
+      sentRequestCount: sentRequests.value.length
+    });
     if (withIndicator) {
       isDashboardLoading.value = false;
     }
@@ -1081,35 +1198,84 @@ async function loadDashboardData(withIndicator = false) {
 function connectWebSocket() {
   if (stompClient || !currentUsername.value) return;
 
+  const webSocketUrl = toWebSocketUrl('/ws');
+  debugLog('Connecting WebSocket', {
+    username: currentUsername.value,
+    url: webSocketUrl,
+    nativePlatform: Capacitor.isNativePlatform(),
+    platform: Capacitor.getPlatform()
+  });
+
   const client = new Client({
-    webSocketFactory: () => new SockJS(toWebSocketUrl('/ws')),
+    webSocketFactory: () => {
+      debugLog('Creating SockJS instance', { url: webSocketUrl });
+      return new SockJS(webSocketUrl);
+    },
     reconnectDelay: 5000
   });
 
   client.onConnect = () => {
+    isWebSocketConnected = true;
+    debugLog('WebSocket connected', {
+      username: currentUsername.value
+    });
     client.subscribe(`/topic/updates/${currentUsername.value}`, (message) => {
       const data = message.body;
+      debugLog('WebSocket message received', {
+        username: currentUsername.value,
+        body: data
+      });
       if (data.startsWith('{"type":"thought"')) {
         try {
           const thought = JSON.parse(data) as ThoughtMessage;
+          const occurredAt = new Date().toISOString();
+          patchPartnerByUsername(thought.sender, (partner) => {
+            return {
+              ...partner,
+              receivedClicks: partner.receivedClicks + 1,
+              lastReceivedMood: thought.mood,
+              lastReceivedAt: occurredAt
+            };
+          });
+          debugLog('Applied incoming thought update locally', {
+            sender: thought.sender,
+            mood: thought.mood,
+            occurredAt
+          });
           showToast(`${thought.sender} is thinking of you ${thought.emoji}!`, 'success');
         } catch (error) {
           console.error(error);
         }
-        loadPartners();
+        void loadPartners();
       } else {
-        loadPartners();
-        loadRequests();
+        void loadPartners();
+        void loadRequests();
       }
     });
   };
 
   client.onStompError = (frame) => {
+    isWebSocketConnected = false;
+    debugLog('STOMP error', {
+      message: frame.headers['message'],
+      body: frame.body
+    });
     console.error('STOMP error', frame.headers['message']);
   };
 
   client.onWebSocketError = (event) => {
+    isWebSocketConnected = false;
+    debugLog('WebSocket error', {
+      eventType: event.type
+    });
     console.error('WebSocket error', event);
+  };
+
+  client.onWebSocketClose = () => {
+    isWebSocketConnected = false;
+    debugLog('WebSocket closed', {
+      username: currentUsername.value
+    });
   };
 
   client.activate();
@@ -1118,8 +1284,20 @@ function connectWebSocket() {
 
 function disconnectWebSocket() {
   if (!stompClient) return;
+  debugLog('Disconnecting WebSocket', {
+    username: currentUsername.value
+  });
   stompClient.deactivate();
   stompClient = null;
+  isWebSocketConnected = false;
+}
+
+function reconnectWebSocket() {
+  debugLog('Reconnecting WebSocket', {
+    username: currentUsername.value
+  });
+  disconnectWebSocket();
+  connectWebSocket();
 }
 
 async function setupPushNotifications() {
