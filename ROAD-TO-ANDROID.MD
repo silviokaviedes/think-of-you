@@ -225,7 +225,7 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 
 ### F) Verification
 - [ ] Test login, connections, thoughts, stats in Android emulator/device. Android emulator launch, login, dashboard access, and sending thoughts are working; connection list/state sync and stats still need explicit verification.
-- [ ] Verify WebSocket updates work in foreground. Current result: updates do not appear live until the user switches views / refreshes data.
+- [ ] Verify WebSocket updates work in foreground. Root cause was identified in local testing: the Capacitor WebView rejected a `ws://...` SockJS URL (`'ws:' is not allowed`). The frontend now uses the backend `http://.../ws` endpoint for SockJS and has been rebuilt/synced; run one more Android verification pass to confirm live updates now arrive while the dashboard is open.
 - [ ] Verify push notifications in background/closed state.
 
 ---
@@ -239,14 +239,16 @@ Current status after local emulator testing:
 - `google-services.json` has been added and the app no longer crashes during startup.
 - Dashboard opens successfully after login.
 - Sending a thought from the Android app works.
-- Foreground live updates via WebSocket are still not working correctly; the UI only reflects updates after switching views / refreshing data.
+- Root cause for missing foreground live updates has been identified: the Android WebView rejected the generated `ws://...` SockJS URL. The frontend was updated to use the backend `http://.../ws` SockJS endpoint instead, and the Android project was rebuilt/synced.
+- Additional temporary frontend debug logging was added around the WebSocket lifecycle to support Android verification and can be removed after confirmation.
 
 Next exact steps:
-1. Investigate why foreground WebSocket updates do not refresh the Android dashboard in place.
-2. Re-test connection list/state sync after fixing the WebSocket/update issue.
+1. Re-test foreground WebSocket updates on Android with the current build and confirm the dashboard refreshes live while open.
+2. Re-test connection list/state sync after the WebSocket fix.
 3. Verify the stats view on Android.
 4. Verify push notifications in background/closed state.
-5. Continue with release-readiness tasks only after the remaining Android verification items pass.
+5. Remove the temporary frontend debug logging after Android verification is complete.
+6. Continue with release-readiness tasks only after the remaining Android verification items pass.
 
 If Android behavior regresses again, use Android Studio Logcat first and check for Capacitor, Chromium, Firebase, and WebSocket-related errors before changing code.
 
@@ -275,7 +277,7 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
 - In Firebase Console, add an **Android app** with package name `de.kaviedes.thinkofyou`.
 - Download `google-services.json` and place it here:
   - `frontend/android/app/google-services.json`
-- Status: added locally. Firebase-based app startup no longer crashes, but background/closed-state push delivery still needs verification.
+- Status: added locally. Firebase-based app startup no longer crashes, the Android client receives an FCM token, and background/closed-state push delivery still needs verification.
 - Generate a **Service Account** in Firebase and export the JSON key.
   - Decide how you will store credentials in production:
     - `FIREBASE_SERVICE_ACCOUNT_BASE64` (base64‑encoded JSON)
@@ -303,7 +305,7 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
   ```
 - Wait for Gradle sync to complete.
 - Fix any missing SDK/Build Tools prompts in Android Studio.
-- Status: done locally. The next Android-side setup task is adding `frontend/android/app/google-services.json` and resyncing the project.
+- Status: done locally. `frontend/android/app/google-services.json` has already been added locally and the project has been resynced after the latest frontend/WebSocket fixes.
 
 #### 2.2 Signing key (required for Play Store)
 - Generate a **keystore** for release signing.
