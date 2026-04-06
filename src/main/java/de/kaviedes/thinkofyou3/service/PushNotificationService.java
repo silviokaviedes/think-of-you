@@ -108,7 +108,7 @@ public class PushNotificationService {
                 .build();
 
         try {
-            BatchResponse response = FirebaseMessaging.getInstance().sendMulticast(message);
+            BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
             // Remove invalid tokens reported by FCM to keep the list clean.
             cleanupInvalidTokens(tokens, response);
         } catch (Exception ex) {
