@@ -1,14 +1,51 @@
 apply plugin: 'com.android.application'
 
+def readReleaseConfig() {
+    def keystorePropertiesFile = rootProject.file('keystore.properties')
+    def keystoreProperties = new Properties()
+
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.withInputStream { stream ->
+            keystoreProperties.load(stream)
+        }
+    }
+
+    return [
+        storeFile    : keystoreProperties.getProperty('storeFile') ?: System.getenv('ANDROID_KEYSTORE_PATH'),
+        storePassword: keystoreProperties.getProperty('storePassword') ?: System.getenv('ANDROID_KEYSTORE_PASSWORD'),
+        keyAlias     : keystoreProperties.getProperty('keyAlias') ?: System.getenv('ANDROID_KEY_ALIAS'),
+        keyPassword  : keystoreProperties.getProperty('keyPassword') ?: System.getenv('ANDROID_KEY_PASSWORD')
+    ]
+}
+
+def releaseConfig = readReleaseConfig()
+def hasReleaseSigning =
+    releaseConfig.storeFile &&
+    releaseConfig.storePassword &&
+    releaseConfig.keyAlias &&
+    releaseConfig.keyPassword
+
 android {
     namespace = "de.kaviedes.thinkofyou"
     compileSdk = rootProject.ext.compileSdkVersion
+
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+                storeFile file(releaseConfig.storeFile)
+                storePassword releaseConfig.storePassword
+                keyAlias releaseConfig.keyAlias
+                keyPassword releaseConfig.keyPassword
+            }
+        }
+    }
+
     defaultConfig {
         applicationId "de.kaviedes.thinkofyou"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -19,9 +56,16 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+if (!hasReleaseSigning) {
+    logger.lifecycle("Release signing is not fully configured. Add frontend/android/keystore.properties or ANDROID_KEYSTORE_* environment variables before generating a signed release build.")
 }
 
 repositories {

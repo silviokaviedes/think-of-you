@@ -281,8 +281,8 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [x] Add Firebase Admin SDK and credentials management.
 
 ### D) Release readiness
-- [ ] Define `versionCode` / `versionName` in Android Gradle config.
-- [ ] Create signing keystore and configure release signing.
+- [x] Define `versionCode` / `versionName` in Android Gradle config. Android now uses `versionCode 1` and `versionName "1.0.0"` in `frontend/android/app/build.gradle`.
+- [ ] Create signing keystore and configure release signing. Gradle is prepared to read signing credentials from `frontend/android/keystore.properties` or `ANDROID_KEYSTORE_*` environment variables, but the real keystore and secrets still need to be created and supplied.
 - [ ] Generate signed AAB from Android Studio.
 - [x] Generate and verify a local debug APK build (`./gradlew.bat assembleDebug` completed successfully).
 - [ ] Add app icons and splash screen assets.
@@ -298,9 +298,9 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 
 ### F) Verification
 - [x] Test core Android app flow on emulator/device. Android app launch, login, dashboard access, sending thoughts, and general manual app testing have been completed successfully.
-- [ ] Verify connection list/state sync explicitly on Android after the latest WebSocket fix.
-- [ ] Verify the stats view explicitly on Android.
-- [ ] Verify WebSocket updates work in foreground. Root cause was identified in local testing: the Capacitor WebView rejected a `ws://...` SockJS URL (`'ws:' is not allowed`). The frontend now uses the backend `http://.../ws` endpoint for SockJS and has been rebuilt/synced; run one more Android verification pass to confirm live updates now arrive while the dashboard is open.
+- [x] Verify connection list/state sync explicitly on Android after the latest WebSocket fix. Manually re-tested and confirmed working.
+- [x] Verify the stats view explicitly on Android. Manually re-tested and confirmed working.
+- [x] Verify WebSocket updates work in foreground. Manually re-tested and confirmed the dashboard refreshes live while open after switching SockJS to the backend `http://.../ws` endpoint.
 - [x] Verify push notifications in background/closed state.
 
 ---
@@ -319,14 +319,18 @@ Current status after local emulator testing:
 - The app has been manually through-tested at a general level after the latest Android changes.
 - Background push notifications now work against the Railway deployment after setting `FIREBASE_SERVICE_ACCOUNT_BASE64` and switching the backend send path to `sendEachForMulticast(...)`.
 - Root cause for missing foreground live updates has been identified: the Android WebView rejected the generated `ws://...` SockJS URL. The frontend was updated to use the backend `http://.../ws` SockJS endpoint instead, and the Android project was rebuilt/synced.
-- Additional temporary frontend debug logging was added around the WebSocket lifecycle to support Android verification and can be removed after confirmation.
+- Foreground WebSocket updates have now been manually re-tested and confirmed working on Android with the current build.
+- Connection list/state sync has now been manually re-tested and confirmed working on Android after the WebSocket fix.
+- The stats view has now been manually re-tested and confirmed working on Android.
+- Additional frontend debug logging remains in place around the WebSocket lifecycle by explicit team decision. It is no longer treated as a pending cleanup task.
+- Android release metadata is now defined with `versionCode 1` and `versionName "1.0.0"`.
+- Android release-signing wiring is now prepared in Gradle for either `frontend/android/keystore.properties` or `ANDROID_KEYSTORE_*` environment variables.
+- The updated Android Gradle configuration has been re-verified with a successful `./gradlew.bat assembleDebug` build.
 
 Next exact steps:
-1. Re-test foreground WebSocket updates on Android with the current build and confirm the dashboard refreshes live while open.
-2. Re-test connection list/state sync after the WebSocket fix.
-3. Verify the stats view on Android.
-4. Remove the temporary frontend debug logging after Android verification is complete.
-5. Continue with release-readiness tasks only after the remaining Android verification items pass.
+1. Create or provide the real Android release keystore and signing secrets.
+2. Generate a signed AAB.
+3. Continue with the remaining release-readiness tasks such as app icons, splash screen, and Play Store assets.
 
 If Android behavior regresses again, use Android Studio Logcat first and check for Capacitor, Chromium, Firebase, and WebSocket-related errors before changing code.
 
@@ -395,6 +399,10 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
 - Generate a **keystore** for release signing.
 - Store the keystore securely (never commit it).
 - Configure signing in `frontend/android/app/build.gradle` for the `release` build type.
+- Status: Gradle release-signing wiring is already in place. Provide either:
+  - `frontend/android/keystore.properties` based on `frontend/android/keystore.properties.example`, or
+  - environment variables `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD`
+  before generating a signed release build.
 - Record:
   - keystore path
   - alias name
