@@ -170,6 +170,53 @@ Notes:
 - The Capacitor webDir is set to `../src/main/resources/static` to reuse the existing Vite output.
 - If you change web assets, rerun `npm run build` and `npx cap sync android`.
 
+### Android build modes
+
+There are two distinct Android build modes:
+
+1. Local Android mode
+- Use this when the backend is running locally via `docker compose`.
+- The Android emulator talks to the host machine through `http://10.0.2.2:8080`.
+- Commands:
+  ```bash
+  docker compose up --build
+  cd frontend
+  npm install
+  npm run build:android-local
+  npm run android:sync
+  npm run android:open
+  ```
+- PowerShell shortcut:
+  ```powershell
+  .\scripts\android-local.ps1
+  ```
+
+2. Railway Android mode
+- Use this when the Android app should call the deployed Railway backend instead of your local machine.
+- Create `frontend/.env.android-railway.local` based on `frontend/.env.android-railway.example` and set:
+  ```bash
+  VITE_API_BASE_URL=https://think-of-you-production.up.railway.app
+  ```
+- Then build and sync:
+  ```bash
+  cd frontend
+  npm install
+  npm run build:android-railway
+  npm run android:sync
+  npm run android:open
+  ```
+- PowerShell shortcut:
+  ```powershell
+  .\scripts\android-railway.ps1
+  ```
+
+Important:
+- `docker-compose.yml` is only for the local backend stack.
+- Railway deployment still uses the root `Dockerfile`.
+- You do not need a second Docker Compose file just to switch Android between local and Railway.
+- The Android app decides which backend to use at build time via the Vite mode and `VITE_API_BASE_URL`.
+- Both PowerShell scripts also support `-SkipOpen` if you only want build + sync without opening Android Studio.
+
 ### Push notifications (FCM)
 Client:
 - Runtime permission is requested on Android 13+.

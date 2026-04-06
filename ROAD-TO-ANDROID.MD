@@ -52,6 +52,74 @@ npm run build
 
 This outputs the bundled assets to `src/main/resources/static`, which Capacitor will package into the Android app via `webDir`.
 
+### Android build modes: local vs Railway
+
+Use one of these two modes, depending on which backend the Android app should call:
+
+#### Mode A: Local Android testing against Docker Compose
+
+Use this when your backend is running locally via `docker compose up --build`.
+
+Commands:
+
+```bash
+docker compose up --build
+cd frontend
+npm install
+npm run build:android-local
+npm run android:sync
+npm run android:open
+```
+
+PowerShell shortcut from `frontend`:
+
+```powershell
+.\scripts\android-local.ps1
+```
+
+Behavior:
+- The Android build is configured to call `http://10.0.2.2:8080`
+- `10.0.2.2` is the Android emulator alias for the host machine
+- This mode is for emulator testing against the local Spring Boot app
+
+#### Mode B: Android testing against Railway
+
+Use this when the Android app should call your deployed Railway backend instead of the local machine.
+
+Setup:
+- Copy `frontend/.env.android-railway.example` to `frontend/.env.android-railway.local`
+- Set:
+
+```bash
+VITE_API_BASE_URL=https://think-of-you-production.up.railway.app
+```
+
+Commands:
+
+```bash
+cd frontend
+npm install
+npm run build:android-railway
+npm run android:sync
+npm run android:open
+```
+
+PowerShell shortcut from `frontend`:
+
+```powershell
+.\scripts\android-railway.ps1
+```
+
+Behavior:
+- The Android build uses `VITE_API_BASE_URL`
+- No local `docker compose` backend is required for this mode
+
+Important:
+- `docker-compose.yml` remains the local backend stack only
+- Railway continues to build the web/backend service from the root `Dockerfile`
+- No second Docker Compose file is required just to switch Android between local and Railway
+- Both PowerShell scripts support `-SkipOpen` if you only want build + sync without opening Android Studio
+
 ## 3) Add Android platform
 
 ```bash
@@ -220,6 +288,7 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [ ] Add app icons and splash screen assets.
 - [x] Automate production handling for `frontend/android/app/google-services.json` via `GOOGLE_SERVICES_JSON_B64` so Railway can recreate it from an environment variable during Android builds.
 - [x] Document production handling for `frontend/android/app/google-services.json` via `GOOGLE_SERVICES_JSON_B64` for Railway-style environment-variable-only builds.
+- [x] Document separate Android build/start flows for local Docker Compose backend vs Railway backend.
 - [ ] Set `FIREBASE_SERVICE_ACCOUNT_BASE64` in Railway so the backend can authenticate to Firebase Admin for server-side push delivery.
 
 ### E) Play Store requirements
@@ -242,6 +311,7 @@ Current status after local emulator testing:
 - Android Studio project opens and Gradle sync completes.
 - Android app launches in the emulator.
 - Login from the Android emulator works against the local backend.
+- Android now has two documented build modes: local emulator-to-host backend and Railway-backed build via `VITE_API_BASE_URL`.
 - `google-services.json` has been added and the app no longer crashes during startup.
 - Dashboard opens successfully after login.
 - Sending a thought from the Android app works.
@@ -301,8 +371,8 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
 - Ensure the backend + frontend are served over **HTTPS**.
 - If using a custom domain, configure SSL and verify the domain.
 - Confirm the API base URL strategy:
-  - Option A (recommended): backend serves the frontend at same origin.
-  - Option B: set `VITE_API_BASE_URL` and update frontend requests.
+  - Option A: Android local testing uses `npm run build:android-local` and talks to `http://10.0.2.2:8080`
+  - Option B: Railway-backed Android builds use `npm run build:android-railway` and `VITE_API_BASE_URL`
 
 ---
 

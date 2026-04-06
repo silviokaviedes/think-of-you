@@ -430,7 +430,10 @@ import { PushNotifications } from '@capacitor/push-notifications';
 const configuredApiBaseUrl = typeof import.meta.env.VITE_API_BASE_URL === 'string'
   ? import.meta.env.VITE_API_BASE_URL.trim().replace(/\/$/, '')
   : '';
-const nativeApiBaseUrl = Capacitor.getPlatform() === 'android' ? 'http://10.0.2.2:8080' : '';
+const nativeApiBaseUrl =
+  Capacitor.getPlatform() === 'android' && import.meta.env.MODE === 'android-local'
+    ? 'http://10.0.2.2:8080'
+    : '';
 const apiBaseUrl = Capacitor.isNativePlatform()
   ? configuredApiBaseUrl || nativeApiBaseUrl
   : configuredApiBaseUrl;

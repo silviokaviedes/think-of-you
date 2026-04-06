@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:android-local": "vite build --mode android-local",
+    "build:android-railway": "vite build --mode android-railway",
     "preview": "vite preview",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android",
     "android:prepare-google-services": "node scripts/prepare-google-services.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
