@@ -202,9 +202,10 @@ test('User can change password from profile', async ({ page }) => {
   await page.getByRole('button', { name: 'Profile' }).first().click();
   await expect(page.locator('#profile-section')).toBeVisible();
 
-  await page.getByPlaceholder('Current password').fill(oldPassword);
-  await page.getByPlaceholder('New password', { exact: true }).fill(newPassword);
-  await page.getByPlaceholder('Confirm new password').fill(newPassword);
+  const profileSection = page.locator('#profile-section');
+  await profileSection.getByPlaceholder('Current password', { exact: true }).fill(oldPassword);
+  await profileSection.getByPlaceholder('New password', { exact: true }).fill(newPassword);
+  await profileSection.getByPlaceholder('Confirm new password').fill(newPassword);
   await page.getByRole('button', { name: 'Update password' }).click();
   await expect(page.locator('#toast-container')).toContainText('Password updated successfully');
 
@@ -219,6 +220,61 @@ test('User can change password from profile', async ({ page }) => {
   await page.getByPlaceholder('Password').fill(newPassword);
   await page.getByRole('button', { name: 'Login' }).click();
   await expect(page.locator('#toast-container')).toContainText('Welcome back');
+});
+
+test('User can delete account from profile and loses access', async ({ page, request }) => {
+  const userA = uniqueUser('delete-a');
+  const userB = uniqueUser('delete-b');
+
+  await registerUser(request, userA, password);
+  await registerUser(request, userB, password);
+
+  const userAAuth = await loginUser(request, userA, password);
+  const userBAuth = await loginUser(request, userB, password);
+
+  await request.post('/api/connections/request', {
+    data: { username: userB },
+    headers: { Authorization: `Bearer ${userAAuth.token}` }
+  });
+
+  const pendingRes = await request.get('/api/connections/requests', {
+    headers: { Authorization: `Bearer ${userBAuth.token}` }
+  });
+  const pending = (await pendingRes.json()) as Array<{ id: string; partnerUsername: string }>;
+  const match = pending.find((item) => item.partnerUsername === userA);
+  expect(match).toBeTruthy();
+
+  await request.post(`/api/connections/${match!.id}/accept`, {
+    headers: { Authorization: `Bearer ${userBAuth.token}` }
+  });
+
+  await loginViaStorage(page, userAAuth.token, userAAuth.username);
+  await page.getByRole('button', { name: 'Profile' }).first().click();
+  await expect(page.locator('#profile-section')).toBeVisible();
+
+  page.on('dialog', (dialog) => dialog.accept());
+  await page.getByPlaceholder('Current password for account deletion').fill(password);
+  await page.getByPlaceholder(`Type ${userA} to confirm`).fill(userA);
+  await page.getByRole('button', { name: 'Delete account permanently' }).click();
+
+  await expect(page.locator('#auth-section')).toBeVisible();
+  await expect(page.locator('#toast-container')).toContainText('Your account has been deleted.');
+
+  await page.getByPlaceholder('Username').fill(userA);
+  await page.getByPlaceholder('Password').fill(password);
+  await page.getByRole('button', { name: 'Login' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Login failed');
+
+  await page.getByPlaceholder('Username').fill(userB);
+  await page.getByPlaceholder('Password').fill(password);
+  await page.getByRole('button', { name: 'Login' }).click();
+  await expect(page.locator('#dashboard-section')).toBeVisible();
+  await expect(page.locator('.partner-card').filter({ hasText: userA })).toHaveCount(0);
+
+  const searchRes = await request.get(`/api/users/search?username=${encodeURIComponent(userA)}`, {
+    headers: { Authorization: `Bearer ${userBAuth.token}` }
+  });
+  expect(searchRes.status()).toBe(404);
 });
 
 test('User can view event log timeline with configurable amount', async ({ page, request }) => {

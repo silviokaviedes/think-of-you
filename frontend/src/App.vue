@@ -72,6 +72,10 @@
             <button style="flex: 2" :disabled="isAuthBusy" @click="login">Login</button>
             <button class="secondary-btn" style="flex: 1" :disabled="isAuthBusy" @click="register">Register</button>
           </div>
+          <p style="color: var(--text-light); margin-top: 16px; font-size: 14px;">
+            Need account deletion help?
+            <a href="/account-deletion.html" target="_blank" rel="noopener noreferrer">Account deletion info</a>
+          </p>
         </div>
       </section>
 
@@ -311,6 +315,41 @@
               <button :disabled="isMoodPreferencesBusy" @click="saveMoodPreferences">Save emoji preferences</button>
             </div>
           </div>
+          <div
+            id="delete-account-panel"
+            style="margin-top: 28px; padding-top: 20px; border-top: 1px solid rgba(0, 0, 0, 0.08);"
+          >
+            <h3 style="margin-bottom: 8px; color: #a33a48;">Delete account</h3>
+            <p style="color: var(--text-light); margin-bottom: 12px;">
+              This permanently removes your account, connections, thought history, refresh tokens, and stored push tokens.
+            </p>
+            <p style="color: var(--text-light); margin-bottom: 12px;">
+              Type your current password and your username <strong>{{ currentUsername }}</strong> to confirm.
+            </p>
+            <input
+              v-model="deleteAccountPassword"
+              type="password"
+              placeholder="Current password for account deletion"
+            />
+            <input
+              v-model.trim="deleteAccountConfirmation"
+              type="text"
+              :placeholder="`Type ${currentUsername} to confirm`"
+            />
+            <div class="button-group" style="margin-top: 12px;">
+              <button
+                class="danger-btn"
+                :disabled="isDeleteAccountBusy"
+                @click="deleteAccount"
+              >
+                Delete account permanently
+              </button>
+            </div>
+            <p style="color: var(--text-light); margin-top: 12px; font-size: 14px;">
+              Outside the app:
+              <a href="/account-deletion.html" target="_blank" rel="noopener noreferrer">account deletion page</a>
+            </p>
+          </div>
         </div>
       </section>
 
@@ -467,6 +506,9 @@ const profileCurrentPassword = ref('');
 const profileNewPassword = ref('');
 const profileConfirmPassword = ref('');
 const isPasswordBusy = ref(false);
+const deleteAccountPassword = ref('');
+const deleteAccountConfirmation = ref('');
+const isDeleteAccountBusy = ref(false);
 const isMoodPreferencesBusy = ref(false);
 const isDashboardPreferenceBusy = ref(false);
 const dashboardDisplayMode = ref<DashboardDisplayMode>('counts');
@@ -529,6 +571,11 @@ const moodLookup = computed<Record<string, MoodOption>>(() => {
   }, {});
 });
 const newsItems: NewsItem[] = [
+  {
+    date: 'Apr 2026',
+    title: 'Account Deletion Is Now Available',
+    description: 'You can now permanently delete your account from Profile, and an external account deletion page is available outside the app.'
+  },
   {
     date: 'Feb 2026',
     title: 'Dashboard Loading Indicator',
@@ -893,6 +940,8 @@ function logout(callServer = true) {
   profileCurrentPassword.value = '';
   profileNewPassword.value = '';
   profileConfirmPassword.value = '';
+  deleteAccountPassword.value = '';
+  deleteAccountConfirmation.value = '';
   moodCatalog.value = [...DEFAULT_MOOD_CATALOG];
   favoriteMoods.value = [...DEFAULT_FAVORITE_MOODS];
   maxFavoriteMoods.value = 8;
@@ -937,6 +986,44 @@ async function changePassword() {
     showToast(body?.error ?? 'Failed to update password.', 'error');
   } finally {
     isPasswordBusy.value = false;
+  }
+}
+
+async function deleteAccount() {
+  if (!deleteAccountPassword.value) {
+    showToast('Please enter your current password to delete the account.', 'error');
+    return;
+  }
+
+  if (deleteAccountConfirmation.value !== currentUsername.value) {
+    showToast('Type your username exactly to confirm account deletion.', 'error');
+    return;
+  }
+
+  if (!window.confirm('Delete your account permanently? This cannot be undone.')) {
+    return;
+  }
+
+  isDeleteAccountBusy.value = true;
+  try {
+    const res = await apiFetch('/api/users/account', {
+      method: 'DELETE',
+      body: JSON.stringify({ currentPassword: deleteAccountPassword.value })
+    });
+    if (!res) return;
+
+    if (res.ok) {
+      logout(false);
+      deleteAccountPassword.value = '';
+      deleteAccountConfirmation.value = '';
+      showToast('Your account has been deleted.', 'success');
+      return;
+    }
+
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    showToast(body?.error ?? 'Failed to delete account.', 'error');
+  } finally {
+    isDeleteAccountBusy.value = false;
   }
 }
 

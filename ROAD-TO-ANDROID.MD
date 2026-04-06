@@ -282,19 +282,20 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 
 ### D) Release readiness
 - [x] Define `versionCode` / `versionName` in Android Gradle config. Android now uses `versionCode 1` and `versionName "1.0.0"` in `frontend/android/app/build.gradle`.
-- [ ] Create signing keystore and configure release signing. Gradle is prepared to read signing credentials from `frontend/android/keystore.properties` or `ANDROID_KEYSTORE_*` environment variables, but the real keystore and secrets still need to be created and supplied.
-- [ ] Generate signed AAB from Android Studio.
+- [x] Create signing keystore and configure release signing. A local release keystore has been created and Gradle signing now works through `frontend/android/keystore.properties` or `ANDROID_KEYSTORE_*` environment variables.
+- [x] Generate signed AAB from Android Studio. Verified locally via `./gradlew.bat bundleRelease`, producing `frontend/android/app/build/outputs/bundle/release/app-release.aab`.
 - [x] Generate and verify a local debug APK build (`./gradlew.bat assembleDebug` completed successfully).
-- [ ] Add app icons and splash screen assets.
+- [x] Add app icons and splash screen assets. Android launcher icons and splash screens were replaced with branded assets generated from the repo script `frontend/scripts/generate-android-brand-assets.ps1`.
 - [x] Automate production handling for `frontend/android/app/google-services.json` via `GOOGLE_SERVICES_JSON_B64` so Railway can recreate it from an environment variable during Android builds.
 - [x] Document production handling for `frontend/android/app/google-services.json` via `GOOGLE_SERVICES_JSON_B64` for Railway-style environment-variable-only builds.
 - [x] Document separate Android build/start flows for local Docker Compose backend vs Railway backend.
 - [x] Set `FIREBASE_SERVICE_ACCOUNT_BASE64` in Railway so the backend can authenticate to Firebase Admin for server-side push delivery.
 
 ### E) Play Store requirements
-- [ ] Draft and host a Privacy Policy.
-- [ ] Prepare Data Safety declaration (based on actual data collected).
+- [ ] Draft and host a Privacy Policy. Draft added in `PRIVACY-POLICY.md`; public hosting and real contact details are still missing.
+- [x] Prepare Data Safety declaration (based on actual data collected). Working notes added in `PLAY-STORE-DATA-SAFETY.md`; final Play Console review is still required.
 - [ ] Complete Play Store listing assets (title, description, screenshots, feature graphic).
+- [x] Add Google Play-compliant account deletion flow and external deletion page/link. The app now includes in-app account deletion from Profile plus `account-deletion.html` for out-of-app guidance.
 
 ### F) Verification
 - [x] Test core Android app flow on emulator/device. Android app launch, login, dashboard access, sending thoughts, and general manual app testing have been completed successfully.
@@ -326,11 +327,15 @@ Current status after local emulator testing:
 - Android release metadata is now defined with `versionCode 1` and `versionName "1.0.0"`.
 - Android release-signing wiring is now prepared in Gradle for either `frontend/android/keystore.properties` or `ANDROID_KEYSTORE_*` environment variables.
 - The updated Android Gradle configuration has been re-verified with a successful `./gradlew.bat assembleDebug` build.
+- A local Android release keystore has been created and wired into the Android build.
+- A signed Android App Bundle build now completes successfully and produces `frontend/android/app/build/outputs/bundle/release/app-release.aab`.
+- Android launcher icons and splash screens have been refreshed with branded release assets.
+- Account deletion is now implemented in-app and documented through the public `account-deletion.html` page.
+- Backend unit tests pass, and the full Playwright suite passes against the local Docker Compose stack when Playwright targets `http://127.0.0.1:8080`.
 
 Next exact steps:
-1. Create or provide the real Android release keystore and signing secrets.
-2. Generate a signed AAB.
-3. Continue with the remaining release-readiness tasks such as app icons, splash screen, and Play Store assets.
+1. Host the privacy policy and account deletion page at public URLs and replace placeholder contact details.
+2. Complete the remaining Play Store listing assets and submission metadata.
 
 If Android behavior regresses again, use Android Studio Logcat first and check for Capacitor, Chromium, Firebase, and WebSocket-related errors before changing code.
 
@@ -399,10 +404,10 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
 - Generate a **keystore** for release signing.
 - Store the keystore securely (never commit it).
 - Configure signing in `frontend/android/app/build.gradle` for the `release` build type.
-- Status: Gradle release-signing wiring is already in place. Provide either:
+- Status: completed locally. Gradle release-signing wiring is already in place. Provide either:
   - `frontend/android/keystore.properties` based on `frontend/android/keystore.properties.example`, or
   - environment variables `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD`
-  before generating a signed release build.
+  before generating a signed release build in another environment.
 - Record:
   - keystore path
   - alias name
@@ -412,7 +417,7 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
 #### 2.3 Build artifacts
 - Build a **signed AAB** (Android App Bundle) for Play Store upload.
 - Also generate a debug APK for internal testing.
-- Status: local debug APK build completed successfully via `./gradlew.bat assembleDebug`.
+- Status: local debug APK build completed successfully via `./gradlew.bat assembleDebug`, and a signed release AAB build completed successfully via `./gradlew.bat bundleRelease`.
 
 ---
 
@@ -426,6 +431,7 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
   - contact method for requests
 - Host the privacy policy on a public URL.
 - Add the link in the Play Console listing.
+- Status: draft created in `PRIVACY-POLICY.md`. Before publishing, replace placeholder contact information and host it on a public, non-editable URL.
 
 #### 3.2 Data Safety form (Play Store)
 - Fill out the Data Safety questionnaire in Play Console.
@@ -435,6 +441,14 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
   - analytics (if any)
   - encryption in transit (HTTPS)
 - Ensure the answers match the actual implementation.
+- Status: working notes created in `PLAY-STORE-DATA-SAFETY.md` based on the current codebase. Final answers still need Play Console review.
+
+#### 3.2.1 Account deletion requirement
+- Google Play requires apps with in-app account creation to also provide account deletion.
+- Add a readily discoverable in-app account deletion path.
+- Add an external web page or support flow that users can access outside the app.
+- Ensure deletion behavior and retention handling match the published privacy policy.
+- Status: completed in the codebase. In-app deletion is available from Profile, and `src/main/resources/static/account-deletion.html` provides the external page. Public hosting and final contact details are still pending.
 
 #### 3.3 Store listing assets
 - Create:

@@ -15,4 +15,6 @@ public interface ThoughtEventRepository extends MongoRepository<ThoughtEvent, St
     List<ThoughtEvent> findTop200ByRecipientIdOrderByOccurredAtDesc(String recipientId);
     List<ThoughtEvent> findTop200ByConnectionIdAndSenderIdOrderByOccurredAtDesc(String connectionId, String senderId);
     List<ThoughtEvent> findTop200ByConnectionIdAndRecipientIdOrderByOccurredAtDesc(String connectionId, String recipientId);
+    void deleteByConnectionIdIn(List<String> connectionIds);
+    void deleteBySenderIdOrRecipientId(String senderId, String recipientId);
 }

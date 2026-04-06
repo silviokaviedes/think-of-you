@@ -2,6 +2,7 @@ package de.kaviedes.thinkofyou3.controller;
 
 import de.kaviedes.thinkofyou3.model.User;
 import de.kaviedes.thinkofyou3.security.JwtFilter;
+import de.kaviedes.thinkofyou3.service.AccountService;
 import de.kaviedes.thinkofyou3.service.AuthService;
 import de.kaviedes.thinkofyou3.service.UserPreferenceService;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,6 +36,9 @@ class UserControllerTest {
 
     @MockBean
     private AuthService authService;
+
+    @MockBean
+    private AccountService accountService;
 
     @MockBean
     private JwtFilter jwtFilter;
@@ -87,6 +92,30 @@ class UserControllerTest {
                         .principal(new UsernamePasswordAuthenticationToken("alice", "n/a"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"currentPassword\":\"wrong\",\"newPassword\":\"new-secret\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Current password is invalid"));
+    }
+
+    @Test
+    void deleteAccount_returnsOkWhenValid() throws Exception {
+        mockMvc.perform(delete("/api/users/account")
+                        .principal(new UsernamePasswordAuthenticationToken("alice", "n/a"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"secret\"}"))
+                .andExpect(status().isOk());
+
+        verify(accountService).deleteAccount("alice", "secret");
+    }
+
+    @Test
+    void deleteAccount_returnsBadRequestWhenValidationFails() throws Exception {
+        org.mockito.Mockito.doThrow(new RuntimeException("Current password is invalid"))
+                .when(accountService).deleteAccount(anyString(), anyString());
+
+        mockMvc.perform(delete("/api/users/account")
+                        .principal(new UsernamePasswordAuthenticationToken("alice", "n/a"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"wrong\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Current password is invalid"));
     }

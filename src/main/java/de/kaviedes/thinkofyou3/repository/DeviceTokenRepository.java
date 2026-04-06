@@ -31,4 +31,6 @@ public interface DeviceTokenRepository extends MongoRepository<DeviceToken, Stri
      * @param token  raw FCM device token
      */
     void deleteByUserIdAndToken(String userId, String token);
+
+    void deleteByUserId(String userId);
 }

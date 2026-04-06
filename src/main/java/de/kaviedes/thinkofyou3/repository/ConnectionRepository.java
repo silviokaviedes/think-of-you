@@ -12,6 +12,7 @@ public interface ConnectionRepository extends MongoRepository<Connection, String
 
     List<Connection> findByRequesterIdAndStatus(String requesterId, Connection.Status status);
     List<Connection> findByRecipientIdAndStatus(String recipientId, Connection.Status status);
+    List<Connection> findByRequesterIdOrRecipientId(String requesterId, String recipientId);
 
     @Query("{ '$or': [ { 'requesterId': ?0, 'status': 'ACCEPTED' }, { 'recipientId': ?0, 'status': 'ACCEPTED' } ] }")
     List<Connection> findAllAccepted(String userId);

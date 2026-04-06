@@ -2,10 +2,12 @@ package de.kaviedes.thinkofyou3.controller;
 
 import de.kaviedes.thinkofyou3.dto.ChangePasswordRequest;
 import de.kaviedes.thinkofyou3.dto.DashboardPreferenceDTO;
+import de.kaviedes.thinkofyou3.dto.DeleteAccountRequest;
 import de.kaviedes.thinkofyou3.dto.UpdateFavoriteMoodsRequest;
 import de.kaviedes.thinkofyou3.dto.UpdateDashboardPreferenceRequest;
 import de.kaviedes.thinkofyou3.dto.UserMoodPreferencesDTO;
 import de.kaviedes.thinkofyou3.model.User;
+import de.kaviedes.thinkofyou3.service.AccountService;
 import de.kaviedes.thinkofyou3.service.AuthService;
 import de.kaviedes.thinkofyou3.service.UserPreferenceService;
 import org.springframework.http.HttpStatus;
@@ -20,10 +22,12 @@ import java.util.Map;
 @RequestMapping("/api/users")
 public class UserController {
     private final AuthService authService;
+    private final AccountService accountService;
     private final UserPreferenceService userPreferenceService;
 
-    public UserController(AuthService authService, UserPreferenceService userPreferenceService) {
+    public UserController(AuthService authService, AccountService accountService, UserPreferenceService userPreferenceService) {
         this.authService = authService;
+        this.accountService = accountService;
         this.userPreferenceService = userPreferenceService;
     }
 
@@ -42,6 +46,18 @@ public class UserController {
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request, Authentication auth) {
         try {
             authService.changePassword(auth.getName(), request.getCurrentPassword(), request.getNewPassword());
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException ex) {
+            Map<String, String> body = new HashMap<>();
+            body.put("error", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        }
+    }
+
+    @DeleteMapping("/account")
+    public ResponseEntity<?> deleteAccount(@RequestBody DeleteAccountRequest request, Authentication auth) {
+        try {
+            accountService.deleteAccount(auth.getName(), request.getCurrentPassword());
             return ResponseEntity.ok().build();
         } catch (RuntimeException ex) {
             Map<String, String> body = new HashMap<>();

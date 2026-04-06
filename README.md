@@ -129,6 +129,7 @@ The app uses short-lived access tokens plus long-lived refresh tokens.
 - On login, client stores `token`, `username`, and `refreshToken`.
 - On app start, if only `refreshToken` is available, client calls `POST /api/auth/refresh` and restores session automatically.
 - On `401`, client tries one silent refresh and retries the original request once before forcing login.
+- Users can delete their account from the Profile screen by confirming their current password and username.
 
 ### Persistence compatibility
 - Existing collections (`users`, `connections`, `thought_events`, etc.) are unchanged.
@@ -257,6 +258,7 @@ For instructions on how to deploy this application to production easily, see the
 - `GET /api/metrics?connectionId=...&from=...&to=...&bucketMinutes=...&direction=received|sent`: Get statistics
 - `GET /api/metrics/moods?connectionId=...&from=...&to=...&bucketMinutes=...&direction=received|sent`: Get mood-based statistics with distribution data
 - `POST /api/push/register`: { token, platform } - Register device token for push notifications
+- `DELETE /api/users/account`: { currentPassword } - Permanently delete the authenticated account and associated app data
 - `GET /api/users/preferences/moods`: Get available moods + user's favorite mood buttons
 - `PUT /api/users/preferences/moods`: { favoriteMoods } - Update favorite mood buttons (max 8)
 - `GET /api/users/preferences/dashboard`: Get dashboard display mode (`counts` or `last_event`)
