@@ -289,7 +289,7 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [x] Automate production handling for `frontend/android/app/google-services.json` via `GOOGLE_SERVICES_JSON_B64` so Railway can recreate it from an environment variable during Android builds.
 - [x] Document production handling for `frontend/android/app/google-services.json` via `GOOGLE_SERVICES_JSON_B64` for Railway-style environment-variable-only builds.
 - [x] Document separate Android build/start flows for local Docker Compose backend vs Railway backend.
-- [ ] Set `FIREBASE_SERVICE_ACCOUNT_BASE64` in Railway so the backend can authenticate to Firebase Admin for server-side push delivery.
+- [x] Set `FIREBASE_SERVICE_ACCOUNT_BASE64` in Railway so the backend can authenticate to Firebase Admin for server-side push delivery.
 
 ### E) Play Store requirements
 - [ ] Draft and host a Privacy Policy.
@@ -301,7 +301,7 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [ ] Verify connection list/state sync explicitly on Android after the latest WebSocket fix.
 - [ ] Verify the stats view explicitly on Android.
 - [ ] Verify WebSocket updates work in foreground. Root cause was identified in local testing: the Capacitor WebView rejected a `ws://...` SockJS URL (`'ws:' is not allowed`). The frontend now uses the backend `http://.../ws` endpoint for SockJS and has been rebuilt/synced; run one more Android verification pass to confirm live updates now arrive while the dashboard is open.
-- [ ] Verify push notifications in background/closed state.
+- [x] Verify push notifications in background/closed state.
 
 ---
 
@@ -317,6 +317,7 @@ Current status after local emulator testing:
 - Sending a thought from the Android app works.
 - A local Android debug build (`assembleDebug`) completes successfully and produces an APK.
 - The app has been manually through-tested at a general level after the latest Android changes.
+- Background push notifications now work against the Railway deployment after setting `FIREBASE_SERVICE_ACCOUNT_BASE64` and switching the backend send path to `sendEachForMulticast(...)`.
 - Root cause for missing foreground live updates has been identified: the Android WebView rejected the generated `ws://...` SockJS URL. The frontend was updated to use the backend `http://.../ws` SockJS endpoint instead, and the Android project was rebuilt/synced.
 - Additional temporary frontend debug logging was added around the WebSocket lifecycle to support Android verification and can be removed after confirmation.
 
@@ -324,9 +325,8 @@ Next exact steps:
 1. Re-test foreground WebSocket updates on Android with the current build and confirm the dashboard refreshes live while open.
 2. Re-test connection list/state sync after the WebSocket fix.
 3. Verify the stats view on Android.
-4. Verify push notifications in background/closed state.
-5. Remove the temporary frontend debug logging after Android verification is complete.
-6. Continue with release-readiness tasks only after the remaining Android verification items pass.
+4. Remove the temporary frontend debug logging after Android verification is complete.
+5. Continue with release-readiness tasks only after the remaining Android verification items pass.
 
 If Android behavior regresses again, use Android Studio Logcat first and check for Capacitor, Chromium, Firebase, and WebSocket-related errors before changing code.
 
@@ -356,6 +356,7 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
 - Download `google-services.json` and place it here:
   - `frontend/android/app/google-services.json`
 - Status: added locally. Firebase-based app startup no longer crashes, the Android client receives an FCM token, and background/closed-state push delivery still needs verification.
+- Status: added locally. Firebase-based app startup no longer crashes, the Android client receives an FCM token, and background/closed-state push delivery has been verified successfully against Railway.
 - For Railway or other environments that only allow environment variables:
   - Base64-encode `google-services.json`
   - Store it as `GOOGLE_SERVICES_JSON_B64`
@@ -366,6 +367,7 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
     - `FIREBASE_SERVICE_ACCOUNT_PATH` (path to JSON on the server)
     - or `GOOGLE_APPLICATION_CREDENTIALS` (standard fallback)
 - Store credentials securely in your hosting provider’s secrets/variables.
+- Status: `FIREBASE_SERVICE_ACCOUNT_BASE64` is set in Railway and confirmed working for FCM delivery.
 
 #### 1.3 Hosting + domain (recommended)
 - Ensure the backend + frontend are served over **HTTPS**.

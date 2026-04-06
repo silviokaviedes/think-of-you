@@ -33,8 +33,11 @@ In Railway, go to the **Variables** tab for your service and add:
 | :--- | :--- |
 | `SPRING_DATA_MONGODB_URI` | *Your MongoDB Atlas connection string from Step 1* |
 | `PORT` | `8080` (Railway usually detects this, but explicit is better) |
+| `FIREBASE_SERVICE_ACCOUNT_BASE64` | *Base64-encoded Firebase service account JSON for server-side FCM push delivery* |
 
 *Note: The app is configured to use `8080` by default in the `Dockerfile`. Railway will automatically map its public URL to this internal port.*
+
+For this project's Railway deployment, `FIREBASE_SERVICE_ACCOUNT_BASE64` has been confirmed as the working configuration for server-side Firebase push notifications.
 
 ### Firebase / Android Build Note
 
