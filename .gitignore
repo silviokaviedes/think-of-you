@@ -40,3 +40,4 @@ out/
 frontend/node_modules/
 frontend/playwright-report/
 frontend/test-results/
+frontend/android/app/google-services.json

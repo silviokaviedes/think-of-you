@@ -216,7 +216,10 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [ ] Define `versionCode` / `versionName` in Android Gradle config.
 - [ ] Create signing keystore and configure release signing.
 - [ ] Generate signed AAB from Android Studio.
+- [x] Generate and verify a local debug APK build (`./gradlew.bat assembleDebug` completed successfully).
 - [ ] Add app icons and splash screen assets.
+- [ ] Automate production handling for `frontend/android/app/google-services.json` via `GOOGLE_SERVICES_JSON_B64` so Railway can recreate it from an environment variable during Android builds.
+- [x] Document production handling for `frontend/android/app/google-services.json` via `GOOGLE_SERVICES_JSON_B64` for Railway-style environment-variable-only builds.
 
 ### E) Play Store requirements
 - [ ] Draft and host a Privacy Policy.
@@ -224,7 +227,9 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [ ] Complete Play Store listing assets (title, description, screenshots, feature graphic).
 
 ### F) Verification
-- [ ] Test login, connections, thoughts, stats in Android emulator/device. Android emulator launch, login, dashboard access, and sending thoughts are working; connection list/state sync and stats still need explicit verification.
+- [x] Test core Android app flow on emulator/device. Android app launch, login, dashboard access, sending thoughts, and general manual app testing have been completed successfully.
+- [ ] Verify connection list/state sync explicitly on Android after the latest WebSocket fix.
+- [ ] Verify the stats view explicitly on Android.
 - [ ] Verify WebSocket updates work in foreground. Root cause was identified in local testing: the Capacitor WebView rejected a `ws://...` SockJS URL (`'ws:' is not allowed`). The frontend now uses the backend `http://.../ws` endpoint for SockJS and has been rebuilt/synced; run one more Android verification pass to confirm live updates now arrive while the dashboard is open.
 - [ ] Verify push notifications in background/closed state.
 
@@ -239,6 +244,8 @@ Current status after local emulator testing:
 - `google-services.json` has been added and the app no longer crashes during startup.
 - Dashboard opens successfully after login.
 - Sending a thought from the Android app works.
+- A local Android debug build (`assembleDebug`) completes successfully and produces an APK.
+- The app has been manually through-tested at a general level after the latest Android changes.
 - Root cause for missing foreground live updates has been identified: the Android WebView rejected the generated `ws://...` SockJS URL. The frontend was updated to use the backend `http://.../ws` SockJS endpoint instead, and the Android project was rebuilt/synced.
 - Additional temporary frontend debug logging was added around the WebSocket lifecycle to support Android verification and can be removed after confirmation.
 
@@ -247,8 +254,9 @@ Next exact steps:
 2. Re-test connection list/state sync after the WebSocket fix.
 3. Verify the stats view on Android.
 4. Verify push notifications in background/closed state.
-5. Remove the temporary frontend debug logging after Android verification is complete.
-6. Continue with release-readiness tasks only after the remaining Android verification items pass.
+5. Automate recreation of `frontend/android/app/google-services.json` from `GOOGLE_SERVICES_JSON_B64` for Railway-style builds.
+6. Remove the temporary frontend debug logging after Android verification is complete.
+7. Continue with release-readiness tasks only after the remaining Android verification items pass.
 
 If Android behavior regresses again, use Android Studio Logcat first and check for Capacitor, Chromium, Firebase, and WebSocket-related errors before changing code.
 
@@ -278,6 +286,10 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
 - Download `google-services.json` and place it here:
   - `frontend/android/app/google-services.json`
 - Status: added locally. Firebase-based app startup no longer crashes, the Android client receives an FCM token, and background/closed-state push delivery still needs verification.
+- For Railway or other environments that only allow environment variables:
+  - Base64-encode `google-services.json`
+  - Store it as `GOOGLE_SERVICES_JSON_B64`
+  - Recreate `frontend/android/app/google-services.json` from that variable before the Android build starts
 - Generate a **Service Account** in Firebase and export the JSON key.
   - Decide how you will store credentials in production:
     - `FIREBASE_SERVICE_ACCOUNT_BASE64` (base64‑encoded JSON)
@@ -320,6 +332,7 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
 #### 2.3 Build artifacts
 - Build a **signed AAB** (Android App Bundle) for Play Store upload.
 - Also generate a debug APK for internal testing.
+- Status: local debug APK build completed successfully via `./gradlew.bat assembleDebug`.
 
 ---
 

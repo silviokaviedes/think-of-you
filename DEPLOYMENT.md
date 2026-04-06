@@ -36,6 +36,39 @@ In Railway, go to the **Variables** tab for your service and add:
 
 *Note: The app is configured to use `8080` by default in the `Dockerfile`. Railway will automatically map its public URL to this internal port.*
 
+### Firebase / Android Build Note
+
+For Android builds, do not commit `frontend/android/app/google-services.json` to git.
+
+If your deployment/build environment only supports environment variables, store the file contents as a base64-encoded variable, for example `GOOGLE_SERVICES_JSON_B64`, and recreate the file before the Android Gradle build starts.
+
+PowerShell example:
+
+```powershell
+[IO.File]::WriteAllBytes(
+  "frontend/android/app/google-services.json",
+  [Convert]::FromBase64String($env:GOOGLE_SERVICES_JSON_B64)
+)
+```
+
+Bash example:
+
+```bash
+echo "$GOOGLE_SERVICES_JSON_B64" | base64 -d > frontend/android/app/google-services.json
+```
+
+Then build normally:
+
+```bash
+cd frontend/android
+./gradlew assembleRelease
+```
+
+Important:
+- `google-services.json` must exist before the Android build starts.
+- Keep the file out of git and provide it through Railway variables or another secret store.
+- The built APK/AAB contains the needed Firebase app configuration; the JSON file itself is primarily a build-time input.
+
 ## 3. Custom Domains
 
 Railway allows you to use your own domain (e.g., `www.yourdomain.com`) instead of the default `.up.railway.app` URL.
