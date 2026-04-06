@@ -182,6 +182,12 @@ Server:
   - `GOOGLE_APPLICATION_CREDENTIALS` (fallback)
 - Place `google-services.json` at `frontend/android/app/google-services.json` (do not commit it).
   - Without this file, Android builds will work but push notifications will not.
+  - For CI or hosts that only support environment variables, set `GOOGLE_SERVICES_JSON_B64` and run:
+    ```bash
+    cd frontend
+    npm run android:prepare-google-services
+    ```
+  - The script recreates `frontend/android/app/google-services.json` before the Android build.
 
 ## Deployment
 For instructions on how to deploy this application to production easily, see the [Deployment Guide](DEPLOYMENT.md).

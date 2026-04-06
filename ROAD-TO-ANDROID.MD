@@ -218,8 +218,9 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [ ] Generate signed AAB from Android Studio.
 - [x] Generate and verify a local debug APK build (`./gradlew.bat assembleDebug` completed successfully).
 - [ ] Add app icons and splash screen assets.
-- [ ] Automate production handling for `frontend/android/app/google-services.json` via `GOOGLE_SERVICES_JSON_B64` so Railway can recreate it from an environment variable during Android builds.
+- [x] Automate production handling for `frontend/android/app/google-services.json` via `GOOGLE_SERVICES_JSON_B64` so Railway can recreate it from an environment variable during Android builds.
 - [x] Document production handling for `frontend/android/app/google-services.json` via `GOOGLE_SERVICES_JSON_B64` for Railway-style environment-variable-only builds.
+- [ ] Set `FIREBASE_SERVICE_ACCOUNT_BASE64` in Railway so the backend can authenticate to Firebase Admin for server-side push delivery.
 
 ### E) Play Store requirements
 - [ ] Draft and host a Privacy Policy.
@@ -254,9 +255,8 @@ Next exact steps:
 2. Re-test connection list/state sync after the WebSocket fix.
 3. Verify the stats view on Android.
 4. Verify push notifications in background/closed state.
-5. Automate recreation of `frontend/android/app/google-services.json` from `GOOGLE_SERVICES_JSON_B64` for Railway-style builds.
-6. Remove the temporary frontend debug logging after Android verification is complete.
-7. Continue with release-readiness tasks only after the remaining Android verification items pass.
+5. Remove the temporary frontend debug logging after Android verification is complete.
+6. Continue with release-readiness tasks only after the remaining Android verification items pass.
 
 If Android behavior regresses again, use Android Studio Logcat first and check for Capacitor, Chromium, Firebase, and WebSocket-related errors before changing code.
 
