@@ -64,6 +64,7 @@ Yes, in the current implementation:
 
 - The app exposes a self-service account deletion flow in the Profile screen.
 - A public `account-deletion.html` page exists for out-of-app deletion guidance.
+- A static `privacy-policy.html` page exists for hosting the privacy policy with the app.
 
 Remaining publication work:
 

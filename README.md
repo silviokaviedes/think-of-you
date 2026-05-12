@@ -242,6 +242,17 @@ Server:
 ## Deployment
 For instructions on how to deploy this application to production easily, see the [Deployment Guide](DEPLOYMENT.md).
 
+### Public static pages
+
+After deployment, these static pages are served by the Spring Boot app at the same public host as the app:
+
+- Privacy policy: `https://YOUR_PUBLIC_DOMAIN/privacy-policy.html`
+- Account deletion instructions: `https://YOUR_PUBLIC_DOMAIN/account-deletion.html`
+
+The source files live in `frontend/public/`. `npm run build` copies them into `src/main/resources/static/` so they are included in the backend deployment.
+
+Before submitting to Google Play, replace the placeholder support/contact details in both pages with the real public values.
+
 ## API Documentation
 - `POST /api/auth/register`: { username, password }
 - `POST /api/auth/login`: { username, password } -> returns `{ token, username, refreshToken }`

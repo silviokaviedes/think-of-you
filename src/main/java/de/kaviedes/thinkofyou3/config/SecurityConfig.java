@@ -31,7 +31,18 @@ public class SecurityConfig {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/index.html", "/css/**", "/js/**", "/", "/favicon.ico", "/error", "/ws/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/index.html",
+                                "/privacy-policy.html",
+                                "/account-deletion.html",
+                                "/css/**",
+                                "/js/**",
+                                "/",
+                                "/favicon.ico",
+                                "/error",
+                                "/ws/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

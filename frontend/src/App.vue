@@ -73,7 +73,8 @@
             <button class="secondary-btn" style="flex: 1" :disabled="isAuthBusy" @click="register">Register</button>
           </div>
           <p style="color: var(--text-light); margin-top: 16px; font-size: 14px;">
-            Need account deletion help?
+            <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+            ·
             <a href="/account-deletion.html" target="_blank" rel="noopener noreferrer">Account deletion info</a>
           </p>
         </div>
@@ -348,6 +349,8 @@
             <p style="color: var(--text-light); margin-top: 12px; font-size: 14px;">
               Outside the app:
               <a href="/account-deletion.html" target="_blank" rel="noopener noreferrer">account deletion page</a>
+              and
+              <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer">privacy policy</a>
             </p>
           </div>
         </div>

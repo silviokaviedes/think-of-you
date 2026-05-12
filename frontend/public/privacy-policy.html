@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thinking of You Privacy Policy</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg-top: #fff0eb;
+      --bg-bottom: #ffd7de;
+      --card: rgba(255, 255, 255, 0.92);
+      --text: #4f2332;
+      --muted: #765966;
+      --accent: #ef5b62;
+      --accent-dark: #b63d50;
+      --border: rgba(79, 35, 50, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      color: var(--text);
+      background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+      padding: 24px;
+    }
+
+    main {
+      width: min(880px, 100%);
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 24px 60px rgba(79, 35, 50, 0.12);
+    }
+
+    h1, h2 {
+      margin: 0 0 12px;
+    }
+
+    h2 {
+      margin-top: 28px;
+    }
+
+    p, li {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .notice {
+      padding: 16px 18px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    a {
+      color: var(--accent-dark);
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 14px;
+      }
+
+      main {
+        padding: 22px;
+        border-radius: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Privacy Policy for Thinking of You</h1>
+    <p>Last updated: April 6, 2026</p>
+
+    <p>
+      This Privacy Policy describes how the Thinking of You app handles information when you use the web app or Android app.
+    </p>
+
+    <div class="notice">
+      <strong>Publication note:</strong>
+      Replace the contact placeholders below with real public contact details before submitting this policy to Google Play.
+    </div>
+
+    <h2>Developer and Contact</h2>
+    <p>Developer/app name: Thinking of You</p>
+    <p>Privacy contact: <strong>REPLACE_WITH_PUBLIC_CONTACT_EMAIL</strong></p>
+    <p>Website or support page: <strong>REPLACE_WITH_PUBLIC_SUPPORT_URL</strong></p>
+
+    <h2>What the App Does</h2>
+    <p>
+      Thinking of You lets users create accounts, connect with other users, send "thinking of you" interactions, optionally attach moods, view connection statistics, and receive real-time and push notifications.
+    </p>
+
+    <h2>Data We Collect</h2>
+    <p>We collect the following categories of data to operate the app:</p>
+    <ul>
+      <li>Account data: username, hashed password, and account creation timestamp.</li>
+      <li>Session and authentication data: access tokens and hashed rotating refresh-token records.</li>
+      <li>Relationship and interaction data: connection requests, connection status, thought counts, thought events, moods, event log entries, and statistics.</li>
+      <li>User preference data: favorite mood buttons and dashboard display preference.</li>
+      <li>Device and notification data: push notification token, platform label, and token registration timestamps.</li>
+    </ul>
+
+    <h2>How We Use Data</h2>
+    <p>We use this data only to provide and operate the app, including:</p>
+    <ul>
+      <li>Creating and securing user accounts.</li>
+      <li>Authenticating sessions and rotating refresh tokens.</li>
+      <li>Letting users find each other and manage connections.</li>
+      <li>Delivering thoughts, moods, counts, event history, and statistics.</li>
+      <li>Sending real-time updates through WebSockets while the app is in use.</li>
+      <li>Sending push notifications through Firebase Cloud Messaging when configured.</li>
+      <li>Storing user preferences and maintaining service integrity.</li>
+    </ul>
+    <p>
+      We do not use the app for advertising profiling, data brokerage, or in-app analytics based on the current implementation.
+    </p>
+
+    <h2>Where Data Is Stored</h2>
+    <p>
+      Application data is stored in MongoDB. Push notifications are sent through Firebase Cloud Messaging. Authentication and app logic run on the application server. Deployment-specific hosting providers may vary.
+    </p>
+
+    <h2>Data Sharing</h2>
+    <p>We do not sell user data.</p>
+    <p>We share data only when necessary to operate the service:</p>
+    <ul>
+      <li>Push notification tokens and notification payload delivery are processed through Firebase Cloud Messaging.</li>
+      <li>Data may be processed by selected infrastructure providers, such as hosting and database providers, acting on behalf of the app operator.</li>
+    </ul>
+    <p>As of the current implementation, the app does not include advertising SDKs or third-party analytics SDKs.</p>
+
+    <h2>Security</h2>
+    <ul>
+      <li>Passwords are stored as hashes, not plaintext.</li>
+      <li>Authenticated API access uses bearer tokens.</li>
+      <li>Refresh tokens are stored hashed on the server and rotated on refresh.</li>
+      <li>Refresh tokens are revoked on logout and after password changes.</li>
+      <li>Production deployments are intended to use HTTPS.</li>
+    </ul>
+    <p>No method of transmission or storage is perfectly secure, but reasonable technical measures are used to protect the data handled by the app.</p>
+
+    <h2>Data Retention</h2>
+    <ul>
+      <li>User accounts remain until they are deleted by the operator or through the in-app account deletion flow.</li>
+      <li>Connection and thought-history data remain associated with the account unless removed by the operator or through account deletion.</li>
+      <li>Refresh tokens expire after 60 days unless revoked earlier.</li>
+      <li>Revoked and expired refresh-token records may remain in the database until cleaned up by maintenance processes.</li>
+      <li>Push tokens remain until replaced, removed as invalid, or deleted by the operator.</li>
+    </ul>
+
+    <h2>Your Choices</h2>
+    <p>Users can currently log out, change their password, delete their account, disconnect from other users, and update mood and dashboard preferences.</p>
+    <p>
+      Account deletion details are available at <a href="/account-deletion.html">/account-deletion.html</a>.
+    </p>
+
+    <h2>Children</h2>
+    <p>The app is not designed for children.</p>
+
+    <h2>International Use</h2>
+    <p>Your data may be processed in countries where your hosting, database, or push notification providers operate.</p>
+
+    <h2>Changes to This Policy</h2>
+    <p>This policy may be updated when the app or its data practices change. Update the "Last updated" date when you publish a revised version.</p>
+
+    <p><a href="/">Open Thinking of You</a></p>
+  </main>
+</body>
+</html>
