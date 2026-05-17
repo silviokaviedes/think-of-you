@@ -299,7 +299,7 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [ ] USER NEEDED: Review and submit the Data Safety form in Play Console. I can help fill out answers from `PLAY-STORE-DATA-SAFETY.md`, but I cannot complete the account-owned legal submission myself.
 - [x] Draft Play Store listing text. Draft added in `PLAY-STORE-LISTING.md`.
 - [ ] USER NEEDED: Approve final store listing wording, target audience, content rating, support contact, and Play Console metadata.
-- [ ] ASSISTABLE: Complete Play Store visual assets. Screenshots and the 1024x500 feature graphic are still missing; I can help create/check them, but final upload requires your Play Console access.
+- [x] Complete Play Store visual assets. Generated `frontend/play-store-assets/app-icon-512x512.png`, `frontend/play-store-assets/feature-graphic-1024x500.png`, and phone screenshots under `frontend/play-store-assets/phone-screenshots/`. Final upload still requires your Play Console access.
 - [x] Add Google Play-compliant account deletion flow and external deletion page/link. The app now includes in-app account deletion from Profile plus `account-deletion.html` for out-of-app guidance.
 
 ### F) Verification
@@ -337,11 +337,12 @@ Current status after local emulator testing:
 - Android launcher icons and splash screens have been refreshed with branded release assets.
 - Account deletion is now implemented in-app and documented through the public `account-deletion.html` page.
 - Backend unit tests pass, and the full Playwright suite passes against the local Docker Compose stack when Playwright targets `http://127.0.0.1:8080`.
+- Play Store visual assets have been generated in `frontend/play-store-assets/`, including the 512x512 app icon, 1024x500 feature graphic, and phone screenshots.
 
 Next exact steps:
-1. ASSISTABLE: Generate or capture final Play Store screenshots and a 1024x500 feature graphic.
-2. USER NEEDED: Review the draft listing in `PLAY-STORE-LISTING.md` and approve the final wording.
-3. USER NEEDED: Submit the Data Safety, content rating, target audience, and final app listing in Play Console.
+1. USER NEEDED: Review the draft listing in `PLAY-STORE-LISTING.md` and approve the final wording.
+2. USER NEEDED: Submit the Data Safety, content rating, target audience, and final app listing in Play Console.
+3. USER NEEDED: Upload the generated Play Store visual assets from `frontend/play-store-assets/` in Play Console.
 
 Things I cannot finish without you:
 - Accessing your Google Play Console account to submit legal/store forms.

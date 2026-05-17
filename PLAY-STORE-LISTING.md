@@ -34,11 +34,11 @@ The app does not include ads or third-party analytics in the current implementat
 - Support URL: `https://think-of-you-production.up.railway.app/`
 - Contact email: `thinkingofyou@kaviedes.de`
 
-## Store Assets Still Needed
+## Store Assets
 
-- ASSISTABLE: App icon, 512 x 512 PNG. Android launcher assets exist, but the final Play Store icon should be exported and verified against Play Console requirements.
-- ASSISTABLE: Feature graphic, 1024 x 500 PNG or JPG.
-- ASSISTABLE: Phone screenshots, at least 2, recommended 4-8.
+- DONE: App icon generated at `frontend/play-store-assets/app-icon-512x512.png`.
+- DONE: Feature graphic generated at `frontend/play-store-assets/feature-graphic-1024x500.png`.
+- DONE: Phone screenshots generated under `frontend/play-store-assets/phone-screenshots/`.
 - OPTIONAL: Tablet screenshots.
 - USER NEEDED: Final approval and upload of all visual assets in Play Console.
 

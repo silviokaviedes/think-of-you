@@ -677,6 +677,15 @@ select {
     .button-group button {
         width: 100%;
     }
+
+    .stats-controls {
+        flex-wrap: wrap;
+    }
+
+    .stats-controls select {
+        flex: 1 1 150px;
+        min-width: 0;
+    }
 }
 
 @media (min-width: 769px) {

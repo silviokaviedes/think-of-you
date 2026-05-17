@@ -239,6 +239,24 @@ Server:
   - The script recreates `frontend/android/app/google-services.json` before the Android build.
 - Background push notifications have been verified successfully against the Railway deployment.
 
+### Play Store visual assets
+
+Play Store screenshots, the feature graphic, and the 512 x 512 app icon can be regenerated from the frontend with:
+
+```bash
+cd frontend
+npm install
+npm run assets:play-store
+```
+
+The generator starts a local Vite server, uses Playwright with mocked API responses, and writes the final PNG files to:
+
+- `frontend/play-store-assets/app-icon-512x512.png`
+- `frontend/play-store-assets/feature-graphic-1024x500.png`
+- `frontend/play-store-assets/phone-screenshots/`
+
+The phone screenshots cover dashboard, mood selection, statistics, event log, profile/account deletion, and news screens. A backend or database is not required for this asset-generation step.
+
 ## Deployment
 For instructions on how to deploy this application to production easily, see the [Deployment Guide](DEPLOYMENT.md).
 
