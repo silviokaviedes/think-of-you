@@ -293,8 +293,8 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 
 ### E) Play Store requirements
 - [x] Draft Privacy Policy and add a static app page. Draft added in `PRIVACY-POLICY.md`, and `/privacy-policy.html` is now sourced from `frontend/public/privacy-policy.html`.
-- [ ] USER NEEDED: Replace public contact placeholders in the privacy policy and account deletion pages. I cannot choose the public support email, developer identity, or support URL for you.
-- [ ] USER NEEDED: Deploy the app or provide the final public domain so `/privacy-policy.html` and `/account-deletion.html` have public HTTPS URLs for Play Console.
+- [x] Replace public contact placeholders in the privacy policy and account deletion pages with `thinkingofyou@kaviedes.de` and `https://think-of-you-production.up.railway.app/`.
+- [x] Set the current production domain for Play Console URLs: `https://think-of-you-production.up.railway.app/privacy-policy.html` and `https://think-of-you-production.up.railway.app/account-deletion.html`.
 - [x] Prepare Data Safety declaration (based on actual data collected). Working notes added in `PLAY-STORE-DATA-SAFETY.md`.
 - [ ] USER NEEDED: Review and submit the Data Safety form in Play Console. I can help fill out answers from `PLAY-STORE-DATA-SAFETY.md`, but I cannot complete the account-owned legal submission myself.
 - [x] Draft Play Store listing text. Draft added in `PLAY-STORE-LISTING.md`.
@@ -339,15 +339,11 @@ Current status after local emulator testing:
 - Backend unit tests pass, and the full Playwright suite passes against the local Docker Compose stack when Playwright targets `http://127.0.0.1:8080`.
 
 Next exact steps:
-1. USER NEEDED: Provide the public privacy/support contact email and support URL, or confirm the exact values I should write into the files.
-2. USER NEEDED: Confirm the production domain to use for the Play Console privacy policy and account deletion URLs.
-3. ASSISTABLE: Generate or capture final Play Store screenshots and a 1024x500 feature graphic.
-4. USER NEEDED: Review the draft listing in `PLAY-STORE-LISTING.md` and approve the final wording.
-5. USER NEEDED: Submit the Data Safety, content rating, target audience, and final app listing in Play Console.
+1. ASSISTABLE: Generate or capture final Play Store screenshots and a 1024x500 feature graphic.
+2. USER NEEDED: Review the draft listing in `PLAY-STORE-LISTING.md` and approve the final wording.
+3. USER NEEDED: Submit the Data Safety, content rating, target audience, and final app listing in Play Console.
 
 Things I cannot finish without you:
-- Choosing or verifying the public support/contact email.
-- Choosing or verifying the public support website/domain.
 - Accessing your Google Play Console account to submit legal/store forms.
 - Making final legal/compliance confirmations on your behalf.
 - Uploading final store assets unless you provide access or do it yourself.
@@ -446,7 +442,7 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
   - contact method for requests
 - Host the privacy policy on a public URL.
 - Add the link in the Play Console listing.
-- Status: draft created in `PRIVACY-POLICY.md`. Before publishing, replace placeholder contact information and host it on a public, non-editable URL.
+- Status: draft created in `PRIVACY-POLICY.md`. Public contact information and the current production URLs are set.
 
 #### 3.2 Data Safety form (Play Store)
 - Fill out the Data Safety questionnaire in Play Console.

@@ -4,15 +4,15 @@ Last updated: April 6, 2026
 
 This Privacy Policy describes how the Thinking of You app handles information when you use the web app or Android app.
 
-This draft is based on the current implementation in this repository. Before publishing to Google Play, replace the contact placeholders below with your real public contact details and host this policy at a public, non-editable URL.
+This policy is based on the current implementation in this repository and is hosted with the production app.
 
 ## Developer and Contact
 
 Developer/app name: Thinking of You
 
-Privacy contact: REPLACE_WITH_PUBLIC_CONTACT_EMAIL
+Privacy contact: thinkingofyou@kaviedes.de
 
-Website or support page: REPLACE_WITH_PUBLIC_SUPPORT_URL
+Website or support page: https://think-of-you-production.up.railway.app/
 
 ## What the App Does
 

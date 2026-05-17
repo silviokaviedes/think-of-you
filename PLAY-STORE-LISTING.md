@@ -29,11 +29,10 @@ The app does not include ads or third-party analytics in the current implementat
 
 ## Publishing URLs
 
-USER NEEDED: Replace these before submission. I can update the files once you provide the final values, but I cannot choose or verify them for you.
-- Privacy policy URL: `https://YOUR_PUBLIC_DOMAIN/privacy-policy.html`
-- Account deletion URL: `https://YOUR_PUBLIC_DOMAIN/account-deletion.html`
-- Support URL: `REPLACE_WITH_PUBLIC_SUPPORT_URL`
-- Contact email: `REPLACE_WITH_PUBLIC_CONTACT_EMAIL`
+- Privacy policy URL: `https://think-of-you-production.up.railway.app/privacy-policy.html`
+- Account deletion URL: `https://think-of-you-production.up.railway.app/account-deletion.html`
+- Support URL: `https://think-of-you-production.up.railway.app/`
+- Contact email: `thinkingofyou@kaviedes.de`
 
 ## Store Assets Still Needed
 

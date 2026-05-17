@@ -66,10 +66,11 @@ Yes, in the current implementation:
 - A public `account-deletion.html` page exists for out-of-app deletion guidance.
 - A static `privacy-policy.html` page exists for hosting the privacy policy with the app.
 
-Remaining publication work:
+Publication values:
 
-- Replace placeholder support/contact information on the public page
-- Ensure the hosted privacy policy and external deletion page URLs are the exact ones submitted in Play Console
+- Privacy policy URL: `https://think-of-you-production.up.railway.app/privacy-policy.html`
+- Account deletion URL: `https://think-of-you-production.up.railway.app/account-deletion.html`
+- Privacy/support contact: `thinkingofyou@kaviedes.de`
 
 ## Draft Console Worksheet
 

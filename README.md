@@ -246,12 +246,12 @@ For instructions on how to deploy this application to production easily, see the
 
 After deployment, these static pages are served by the Spring Boot app at the same public host as the app:
 
-- Privacy policy: `https://YOUR_PUBLIC_DOMAIN/privacy-policy.html`
-- Account deletion instructions: `https://YOUR_PUBLIC_DOMAIN/account-deletion.html`
+- Privacy policy: `https://think-of-you-production.up.railway.app/privacy-policy.html`
+- Account deletion instructions: `https://think-of-you-production.up.railway.app/account-deletion.html`
 
 The source files live in `frontend/public/`. `npm run build` copies them into `src/main/resources/static/` so they are included in the backend deployment.
 
-Before submitting to Google Play, replace the placeholder support/contact details in both pages with the real public values.
+The published pages use `thinkingofyou@kaviedes.de` as the public privacy/support contact and `https://think-of-you-production.up.railway.app/` as the support URL.
 
 ## API Documentation
 - `POST /api/auth/register`: { username, password }
