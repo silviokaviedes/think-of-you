@@ -218,6 +218,31 @@ Important:
 - The Android app decides which backend to use at build time via the Vite mode and `VITE_API_BASE_URL`.
 - Both PowerShell scripts also support `-SkipOpen` if you only want build + sync without opening Android Studio.
 
+### Android release bundle for Play Console
+
+Use the release wrapper when you need a new signed App Bundle for a Play Console track. The script increments `versionCode` in `frontend/android/app/build.gradle`, regenerates Android launcher/splash assets, builds the Railway-targeted web bundle, syncs Capacitor, and runs Gradle `bundleRelease`.
+
+```powershell
+cd frontend
+npm run android:release-bundle
+```
+
+The resulting App Bundle is written to:
+
+```text
+frontend/android/app/build/outputs/bundle/release/app-release.aab
+```
+
+Optional arguments can be passed after `--`:
+
+```powershell
+npm run android:release-bundle -- -VersionCode 3
+npm run android:release-bundle -- -VersionCode 3 -VersionName "1.0.1"
+npm run android:release-bundle -- -SkipAssetGeneration
+```
+
+Google Play requires every uploaded bundle to have a `versionCode` greater than any version already uploaded for the same package name. The script checks this before building.
+
 ### Push notifications (FCM)
 Client:
 - Runtime permission is requested on Android 13+.

@@ -1,6 +1,6 @@
 # Google Play Store Listing Draft
 
-This is a working draft for the Google Play listing. Review and adjust the tone before publishing.
+This Google Play listing wording has been reviewed and approved for publishing.
 
 ## App Details
 
@@ -40,7 +40,7 @@ The app does not include ads or third-party analytics in the current implementat
 - DONE: Feature graphic generated at `frontend/play-store-assets/feature-graphic-1024x500.png`.
 - DONE: Phone screenshots generated under `frontend/play-store-assets/phone-screenshots/`.
 - OPTIONAL: Tablet screenshots.
-- USER NEEDED: Final approval and upload of all visual assets in Play Console.
+- USER NEEDED: Upload of all visual assets in Play Console.
 
 Recommended screenshot set:
 - Login/register screen

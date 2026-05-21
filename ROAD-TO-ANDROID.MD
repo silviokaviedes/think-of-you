@@ -298,7 +298,7 @@ If you want, I can draft the exact frontend code for Capacitor push token regist
 - [x] Prepare Data Safety declaration (based on actual data collected). Working notes added in `PLAY-STORE-DATA-SAFETY.md`.
 - [ ] USER NEEDED: Review and submit the Data Safety form in Play Console. I can help fill out answers from `PLAY-STORE-DATA-SAFETY.md`, but I cannot complete the account-owned legal submission myself.
 - [x] Draft Play Store listing text. Draft added in `PLAY-STORE-LISTING.md`.
-- [ ] USER NEEDED: Approve final store listing wording, target audience, content rating, support contact, and Play Console metadata.
+- [x] USER NEEDED: Approve final store listing wording, target audience, content rating, support contact, and Play Console metadata.
 - [x] Complete Play Store visual assets. Generated `frontend/play-store-assets/app-icon-512x512.png`, `frontend/play-store-assets/feature-graphic-1024x500.png`, and phone screenshots under `frontend/play-store-assets/phone-screenshots/`. Final upload still requires your Play Console access.
 - [x] Add Google Play-compliant account deletion flow and external deletion page/link. The app now includes in-app account deletion from Profile plus `account-deletion.html` for out-of-app guidance.
 
@@ -340,9 +340,8 @@ Current status after local emulator testing:
 - Play Store visual assets have been generated in `frontend/play-store-assets/`, including the 512x512 app icon, 1024x500 feature graphic, and phone screenshots.
 
 Next exact steps:
-1. USER NEEDED: Review the draft listing in `PLAY-STORE-LISTING.md` and approve the final wording.
-2. USER NEEDED: Submit the Data Safety, content rating, target audience, and final app listing in Play Console.
-3. USER NEEDED: Upload the generated Play Store visual assets from `frontend/play-store-assets/` in Play Console.
+1. USER NEEDED: Submit the Data Safety, content rating, target audience, and final app listing in Play Console.
+2. USER NEEDED: Upload the generated Play Store visual assets from `frontend/play-store-assets/` in Play Console.
 
 Things I cannot finish without you:
 - Accessing your Google Play Console account to submit legal/store forms.
