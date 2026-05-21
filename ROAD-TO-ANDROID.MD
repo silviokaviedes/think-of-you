@@ -340,8 +340,9 @@ Current status after local emulator testing:
 - Play Store visual assets have been generated in `frontend/play-store-assets/`, including the 512x512 app icon, 1024x500 feature graphic, and phone screenshots.
 
 Next exact steps:
-1. USER NEEDED: Submit the Data Safety, content rating, target audience, and final app listing in Play Console.
-2. USER NEEDED: Upload the generated Play Store visual assets from `frontend/play-store-assets/` in Play Console.
+1. TECH TODO: Add a production-ready "forgot password" flow using verified email addresses, reset tokens, and a password reset screen. Update privacy policy and Play Console Data Safety answers because email addresses would become collected personal data.
+2. USER NEEDED: Submit the Data Safety, content rating, target audience, and final app listing in Play Console.
+3. USER NEEDED: Upload the generated Play Store visual assets from `frontend/play-store-assets/` in Play Console.
 
 Things I cannot finish without you:
 - Accessing your Google Play Console account to submit legal/store forms.
