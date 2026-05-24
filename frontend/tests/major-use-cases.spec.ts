@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-type AuthResponse = { token: string; username: string };
+type AuthResponse = { token: string; username: string; refreshToken?: string };
 
 const password = 'Passw0rd!';
 
@@ -75,6 +75,37 @@ test('User with invalid stored token is redirected to login', async ({ page }) =
     window.localStorage.setItem('token', 'invalid-token-value');
     window.localStorage.setItem('username', 'ghost-user');
     window.localStorage.removeItem('refreshToken');
+  });
+
+  await page.goto('/');
+  await expect(page.locator('#auth-section')).toBeVisible();
+  await expect(page.locator('#toast-container')).toContainText('Session expired');
+});
+
+test('User with stale access token and valid refresh token restores session', async ({ page, request }) => {
+  const username = uniqueUser('refresh-user');
+
+  await registerUser(request, username, password);
+  const auth = await loginUser(request, username, password);
+  expect(auth.refreshToken).toBeTruthy();
+
+  await page.addInitScript(({ usernameValue, refreshTokenValue }) => {
+    window.localStorage.setItem('token', 'stale-token-value');
+    window.localStorage.setItem('username', usernameValue);
+    window.localStorage.setItem('refreshToken', refreshTokenValue);
+  }, { usernameValue: auth.username, refreshTokenValue: auth.refreshToken });
+
+  await page.goto('/');
+  await expect(page.locator('#dashboard-section')).toBeVisible();
+  await expect.poll(async () => page.evaluate(() => window.localStorage.getItem('token'))).not.toBe('stale-token-value');
+  await expect.poll(async () => page.evaluate(() => window.localStorage.getItem('refreshToken'))).not.toBe(auth.refreshToken);
+});
+
+test('User with stale access token and invalid refresh token is redirected to login', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('token', 'stale-token-value');
+    window.localStorage.setItem('username', 'ghost-user');
+    window.localStorage.setItem('refreshToken', 'invalid-refresh-token-value');
   });
 
   await page.goto('/');

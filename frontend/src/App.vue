@@ -81,10 +81,6 @@
       </section>
 
       <section id="dashboard-section" v-if="currentView === 'dashboard'">
-        <div class="card">
-          <h2>My People</h2>
-        </div>
-
         <div class="card energy-card">
           <div class="card-header energy-card-header">
             <h2>My Current Energy</h2>
@@ -215,6 +211,10 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <div class="card">
+          <h2>My People</h2>
         </div>
 
         <div
@@ -1821,7 +1821,7 @@ async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
 
   try {
     const res = await fetch(toApiUrl(String(input)), { ...init, headers });
-    if (res.status === 401) {
+    if (isAuthFailureStatus(res.status)) {
       const refreshed = await tryRefreshSession();
       if (refreshed) {
         const retryHeaders = new Headers(init.headers ?? {});
@@ -1832,7 +1832,7 @@ async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
         }
 
         const retryRes = await fetch(toApiUrl(String(input)), { ...init, headers: retryHeaders });
-        if (retryRes.status !== 401) {
+        if (!isAuthFailureStatus(retryRes.status)) {
           return retryRes;
         }
       }
@@ -1851,6 +1851,12 @@ async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
 
 async function bootstrapSession() {
   if (!token.value && refreshToken.value) {
+    return tryRefreshSession();
+  }
+  if (token.value && refreshToken.value) {
+    if (await validateAccessToken()) {
+      return true;
+    }
     return tryRefreshSession();
   }
   if (token.value && !refreshToken.value) {
@@ -1876,6 +1882,10 @@ async function validateAccessToken() {
     console.error(error);
     return true;
   }
+}
+
+function isAuthFailureStatus(status: number) {
+  return status === 401 || status === 403;
 }
 
 async function tryRefreshSession() {
