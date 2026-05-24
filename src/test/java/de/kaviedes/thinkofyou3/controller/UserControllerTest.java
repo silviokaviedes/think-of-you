@@ -172,4 +172,57 @@ class UserControllerTest {
 
         verify(userPreferenceService).updateDashboardPreference("alice", "last_event");
     }
+
+    @Test
+    void getEnergyLevels_returnsValues() throws Exception {
+        when(userPreferenceService.getEnergyLevels("alice"))
+                .thenReturn(new de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO(20, 60, 90));
+
+        mockMvc.perform(get("/api/users/preferences/energy")
+                        .principal(new UsernamePasswordAuthenticationToken("alice", "n/a")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.body").value(20))
+                .andExpect(jsonPath("$.mind").value(60))
+                .andExpect(jsonPath("$.heart").value(90));
+    }
+
+    @Test
+    void updateEnergyLevels_returnsSavedValues() throws Exception {
+        when(userPreferenceService.updateEnergyLevels(
+                org.mockito.ArgumentMatchers.eq("alice"),
+                org.mockito.ArgumentMatchers.any(de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO.class)))
+                .thenReturn(new de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO(30, 40, 50));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/users/preferences/energy")
+                        .principal(new UsernamePasswordAuthenticationToken("alice", "n/a"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"body\":30,\"mind\":40,\"heart\":50}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.body").value(30))
+                .andExpect(jsonPath("$.mind").value(40))
+                .andExpect(jsonPath("$.heart").value(50));
+
+        ArgumentCaptor<de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO> levelsCaptor =
+                ArgumentCaptor.forClass(de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO.class);
+        verify(userPreferenceService).updateEnergyLevels(org.mockito.ArgumentMatchers.eq("alice"), levelsCaptor.capture());
+        assertThat(levelsCaptor.getValue().getBody()).isEqualTo(30);
+        assertThat(levelsCaptor.getValue().getMind()).isEqualTo(40);
+        assertThat(levelsCaptor.getValue().getHeart()).isEqualTo(50);
+    }
+
+    @Test
+    void updateEnergyLevels_returnsBadRequestWhenInvalid() throws Exception {
+        org.mockito.Mockito.doThrow(new RuntimeException("Energy level body must be between 0 and 100"))
+                .when(userPreferenceService)
+                .updateEnergyLevels(
+                        org.mockito.ArgumentMatchers.eq("alice"),
+                        org.mockito.ArgumentMatchers.any(de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO.class));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/users/preferences/energy")
+                        .principal(new UsernamePasswordAuthenticationToken("alice", "n/a"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"body\":101,\"mind\":40,\"heart\":50}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Energy level body must be between 0 and 100"));
+    }
 }

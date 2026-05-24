@@ -70,4 +70,50 @@ class UserPreferenceServiceTest {
         assertThat(result.getMode()).isEqualTo("last_event");
         verify(userRepository).save(any(User.class));
     }
+
+    @Test
+    void getEnergyLevels_defaultsMissingValuesForExistingUsers() {
+        User user = new User("alice", "hash");
+        user.setBodyEnergy(null);
+        user.setMindEnergy(null);
+        user.setHeartEnergy(null);
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+
+        var result = userPreferenceService.getEnergyLevels("alice");
+
+        assertThat(result.getBody()).isEqualTo(50);
+        assertThat(result.getMind()).isEqualTo(50);
+        assertThat(result.getHeart()).isEqualTo(50);
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void updateEnergyLevels_savesValidatedValues() {
+        User user = new User("alice", "hash");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+
+        var result = userPreferenceService.updateEnergyLevels(
+                "alice",
+                new de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO(20, 60, 90));
+
+        assertThat(result.getBody()).isEqualTo(20);
+        assertThat(result.getMind()).isEqualTo(60);
+        assertThat(result.getHeart()).isEqualTo(90);
+        assertThat(user.getBodyEnergy()).isEqualTo(20);
+        assertThat(user.getMindEnergy()).isEqualTo(60);
+        assertThat(user.getHeartEnergy()).isEqualTo(90);
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void updateEnergyLevels_rejectsValuesOutsideRange() {
+        User user = new User("alice", "hash");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> userPreferenceService.updateEnergyLevels(
+                "alice",
+                new de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO(101, 60, 90)))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("between 0 and 100");
+    }
 }

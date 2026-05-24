@@ -376,7 +376,6 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
 - In Firebase Console, add an **Android app** with package name `de.kaviedes.thinkofyou`.
 - Download `google-services.json` and place it here:
   - `frontend/android/app/google-services.json`
-- Status: added locally. Firebase-based app startup no longer crashes, the Android client receives an FCM token, and background/closed-state push delivery still needs verification.
 - Status: added locally. Firebase-based app startup no longer crashes, the Android client receives an FCM token, and background/closed-state push delivery has been verified successfully against Railway.
 - For Railway or other environments that only allow environment variables:
   - Base64-encode `google-services.json`
@@ -460,7 +459,7 @@ If Android behavior regresses again, use Android Studio Logcat first and check f
 - Add a readily discoverable in-app account deletion path.
 - Add an external web page or support flow that users can access outside the app.
 - Ensure deletion behavior and retention handling match the published privacy policy.
-- Status: completed in the codebase. In-app deletion is available from Profile, and `src/main/resources/static/account-deletion.html` provides the external page. Public hosting and final contact details are still pending.
+- Status: completed in the codebase. In-app deletion is available from Profile, and `src/main/resources/static/account-deletion.html` provides the external page.
 
 #### 3.3 Store listing assets
 - Create:

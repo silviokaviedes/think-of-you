@@ -15,6 +15,8 @@ public class ConnectionDTO {
     private Mood lastSentMood;
     private Instant lastReceivedAt;
     private Instant lastSentAt;
+    private EnergyLevelsDTO lastReceivedEnergy;
+    private EnergyLevelsDTO lastSentEnergy;
 
     public ConnectionDTO() {}
 
@@ -28,6 +30,13 @@ public class ConnectionDTO {
 
     public ConnectionDTO(String id, String partnerUsername, int receivedClicks, int sentClicks, Connection.Status status,
                          Mood lastReceivedMood, Mood lastSentMood, Instant lastReceivedAt, Instant lastSentAt) {
+        this(id, partnerUsername, receivedClicks, sentClicks, status, lastReceivedMood, lastSentMood,
+                lastReceivedAt, lastSentAt, null, null);
+    }
+
+    public ConnectionDTO(String id, String partnerUsername, int receivedClicks, int sentClicks, Connection.Status status,
+                         Mood lastReceivedMood, Mood lastSentMood, Instant lastReceivedAt, Instant lastSentAt,
+                         EnergyLevelsDTO lastReceivedEnergy, EnergyLevelsDTO lastSentEnergy) {
         this.id = id;
         this.partnerUsername = partnerUsername;
         this.receivedClicks = receivedClicks;
@@ -37,6 +46,8 @@ public class ConnectionDTO {
         this.lastSentMood = lastSentMood;
         this.lastReceivedAt = lastReceivedAt;
         this.lastSentAt = lastSentAt;
+        this.lastReceivedEnergy = lastReceivedEnergy;
+        this.lastSentEnergy = lastSentEnergy;
     }
 
     public String getId() { return id; }
@@ -57,4 +68,8 @@ public class ConnectionDTO {
     public void setLastReceivedAt(Instant lastReceivedAt) { this.lastReceivedAt = lastReceivedAt; }
     public Instant getLastSentAt() { return lastSentAt; }
     public void setLastSentAt(Instant lastSentAt) { this.lastSentAt = lastSentAt; }
+    public EnergyLevelsDTO getLastReceivedEnergy() { return lastReceivedEnergy; }
+    public void setLastReceivedEnergy(EnergyLevelsDTO lastReceivedEnergy) { this.lastReceivedEnergy = lastReceivedEnergy; }
+    public EnergyLevelsDTO getLastSentEnergy() { return lastSentEnergy; }
+    public void setLastSentEnergy(EnergyLevelsDTO lastSentEnergy) { this.lastSentEnergy = lastSentEnergy; }
 }

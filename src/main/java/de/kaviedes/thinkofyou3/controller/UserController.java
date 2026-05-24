@@ -3,6 +3,7 @@ package de.kaviedes.thinkofyou3.controller;
 import de.kaviedes.thinkofyou3.dto.ChangePasswordRequest;
 import de.kaviedes.thinkofyou3.dto.DashboardPreferenceDTO;
 import de.kaviedes.thinkofyou3.dto.DeleteAccountRequest;
+import de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO;
 import de.kaviedes.thinkofyou3.dto.UpdateFavoriteMoodsRequest;
 import de.kaviedes.thinkofyou3.dto.UpdateDashboardPreferenceRequest;
 import de.kaviedes.thinkofyou3.dto.UserMoodPreferencesDTO;
@@ -92,6 +93,22 @@ public class UserController {
     public ResponseEntity<?> updateDashboardPreference(@RequestBody UpdateDashboardPreferenceRequest request, Authentication auth) {
         try {
             return ResponseEntity.ok(userPreferenceService.updateDashboardPreference(auth.getName(), request.getMode()));
+        } catch (RuntimeException ex) {
+            Map<String, String> body = new HashMap<>();
+            body.put("error", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        }
+    }
+
+    @GetMapping("/preferences/energy")
+    public ResponseEntity<EnergyLevelsDTO> getEnergyLevels(Authentication auth) {
+        return ResponseEntity.ok(userPreferenceService.getEnergyLevels(auth.getName()));
+    }
+
+    @PutMapping("/preferences/energy")
+    public ResponseEntity<?> updateEnergyLevels(@RequestBody EnergyLevelsDTO request, Authentication auth) {
+        try {
+            return ResponseEntity.ok(userPreferenceService.updateEnergyLevels(auth.getName(), request));
         } catch (RuntimeException ex) {
             Map<String, String> body = new HashMap<>();
             body.put("error", ex.getMessage());

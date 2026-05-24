@@ -12,6 +12,9 @@ public class ThoughtEvent {
     private String senderId;
     private String recipientId;
     private Mood mood;
+    private Integer bodyEnergy;
+    private Integer mindEnergy;
+    private Integer heartEnergy;
     private Instant occurredAt;
 
     public ThoughtEvent() {}
@@ -21,10 +24,18 @@ public class ThoughtEvent {
     }
 
     public ThoughtEvent(String connectionId, String senderId, String recipientId, Mood mood) {
+        this(connectionId, senderId, recipientId, mood, null, null, null);
+    }
+
+    public ThoughtEvent(String connectionId, String senderId, String recipientId, Mood mood,
+                        Integer bodyEnergy, Integer mindEnergy, Integer heartEnergy) {
         this.connectionId = connectionId;
         this.senderId = senderId;
         this.recipientId = recipientId;
         this.mood = mood;
+        this.bodyEnergy = bodyEnergy;
+        this.mindEnergy = mindEnergy;
+        this.heartEnergy = heartEnergy;
         this.occurredAt = Instant.now();
     }
 
@@ -40,4 +51,10 @@ public class ThoughtEvent {
     public void setOccurredAt(Instant occurredAt) { this.occurredAt = occurredAt; }
     public Mood getMood() { return mood; }
     public void setMood(Mood mood) { this.mood = mood; }
+    public Integer getBodyEnergy() { return bodyEnergy; }
+    public void setBodyEnergy(Integer bodyEnergy) { this.bodyEnergy = bodyEnergy; }
+    public Integer getMindEnergy() { return mindEnergy; }
+    public void setMindEnergy(Integer mindEnergy) { this.mindEnergy = mindEnergy; }
+    public Integer getHeartEnergy() { return heartEnergy; }
+    public void setHeartEnergy(Integer heartEnergy) { this.heartEnergy = heartEnergy; }
 }

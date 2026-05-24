@@ -85,6 +85,138 @@
           <h2>My People</h2>
         </div>
 
+        <div class="card energy-card">
+          <div class="card-header energy-card-header">
+            <h2>My Current Energy</h2>
+            <span v-if="isEnergyPreferencesBusy" class="energy-save-state">Saving...</span>
+          </div>
+          <div class="energy-controls">
+            <div class="energy-control" :class="{ active: activeEnergyInfo === 'body' }">
+              <div class="energy-control-main">
+                <button
+                  type="button"
+                  class="energy-icon-btn"
+                  :aria-expanded="activeEnergyInfo === 'body'"
+                  aria-label="Show body energy description"
+                  @click="toggleEnergyInfo('body')"
+                >
+                  <span aria-hidden="true">&#128170;</span>
+                </button>
+                <div class="energy-copy">
+                  <span class="energy-control-label">Body</span>
+                  <span v-if="activeEnergyInfo === 'body'" class="energy-description">
+                    Physical strength, rest, and body tension right now.
+                  </span>
+                </div>
+                <span class="energy-control-value">{{ energyLevels.body }}</span>
+              </div>
+              <div
+                class="energy-slider"
+                :style="{
+                  '--energy-fill': `${energyLevels.body}%`,
+                  '--energy-color': energyLevelColor(energyLevels.body)
+                }"
+              >
+                <span class="energy-slider-track" aria-hidden="true">
+                  <span class="energy-slider-fill"></span>
+                  <span class="energy-slider-thumb"></span>
+                </span>
+                <input
+                  v-model.number="energyLevels.body"
+                  type="range"
+                  min="0"
+                  max="100"
+                  aria-label="Body energy"
+                  @input="markEnergyLevelsDirty"
+                  @change="saveEnergyLevels(false)"
+                />
+              </div>
+            </div>
+            <div class="energy-control" :class="{ active: activeEnergyInfo === 'mind' }">
+              <div class="energy-control-main">
+                <button
+                  type="button"
+                  class="energy-icon-btn"
+                  :aria-expanded="activeEnergyInfo === 'mind'"
+                  aria-label="Show mind energy description"
+                  @click="toggleEnergyInfo('mind')"
+                >
+                  <span aria-hidden="true">&#129504;</span>
+                </button>
+                <div class="energy-copy">
+                  <span class="energy-control-label">Mind</span>
+                  <span v-if="activeEnergyInfo === 'mind'" class="energy-description">
+                    Focus, mental load, and clarity in this moment.
+                  </span>
+                </div>
+                <span class="energy-control-value">{{ energyLevels.mind }}</span>
+              </div>
+              <div
+                class="energy-slider"
+                :style="{
+                  '--energy-fill': `${energyLevels.mind}%`,
+                  '--energy-color': energyLevelColor(energyLevels.mind)
+                }"
+              >
+                <span class="energy-slider-track" aria-hidden="true">
+                  <span class="energy-slider-fill"></span>
+                  <span class="energy-slider-thumb"></span>
+                </span>
+                <input
+                  v-model.number="energyLevels.mind"
+                  type="range"
+                  min="0"
+                  max="100"
+                  aria-label="Mind energy"
+                  @input="markEnergyLevelsDirty"
+                  @change="saveEnergyLevels(false)"
+                />
+              </div>
+            </div>
+            <div class="energy-control" :class="{ active: activeEnergyInfo === 'heart' }">
+              <div class="energy-control-main">
+                <button
+                  type="button"
+                  class="energy-icon-btn"
+                  :aria-expanded="activeEnergyInfo === 'heart'"
+                  aria-label="Show heart energy description"
+                  @click="toggleEnergyInfo('heart')"
+                >
+                  <span aria-hidden="true">&#10084;&#65039;</span>
+                </button>
+                <div class="energy-copy">
+                  <span class="energy-control-label">Heart</span>
+                  <span v-if="activeEnergyInfo === 'heart'" class="energy-description">
+                    Emotional openness, warmth, and connection.
+                  </span>
+                </div>
+                <span class="energy-control-value">{{ energyLevels.heart }}</span>
+              </div>
+              <div
+                class="energy-slider"
+                :style="{
+                  '--energy-fill': `${energyLevels.heart}%`,
+                  '--energy-color': energyLevelColor(energyLevels.heart)
+                }"
+              >
+                <span class="energy-slider-track" aria-hidden="true">
+                  <span class="energy-slider-fill"></span>
+                  <span class="energy-slider-thumb"></span>
+                </span>
+                <input
+                  v-model.number="energyLevels.heart"
+                  type="range"
+                  min="0"
+                  max="100"
+                  aria-label="Heart energy"
+                  @input="markEnergyLevelsDirty"
+                  @change="saveEnergyLevels(false)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div
           v-if="isDashboardLoading"
           class="card"
@@ -104,11 +236,17 @@
                   <span v-if="partner.lastReceivedMood && partner.lastReceivedMood !== 'none'" class="last-mood">
                     {{ getMoodEmoji(partner.lastReceivedMood) }}
                   </span>
+                  <span v-if="partner.lastReceivedEnergy" class="energy-summary">
+                    {{ formatEnergyLevels(partner.lastReceivedEnergy) }}
+                  </span>
                 </template>
                 <span v-else class="stat-detail">
                   <template v-if="partner.lastReceivedAt">
                     <span class="stat-value">{{ getMoodEmoji(partner.lastReceivedMood ?? 'none') }}</span>
                     <span class="stat-time">{{ formatEventTime(partner.lastReceivedAt) }}</span>
+                    <span v-if="partner.lastReceivedEnergy" class="energy-summary">
+                      {{ formatEnergyLevels(partner.lastReceivedEnergy) }}
+                    </span>
                   </template>
                   <template v-else>No events yet</template>
                 </span>
@@ -120,11 +258,17 @@
                   <span v-if="partner.lastSentMood && partner.lastSentMood !== 'none'" class="last-mood">
                     {{ getMoodEmoji(partner.lastSentMood) }}
                   </span>
+                  <span v-if="partner.lastSentEnergy" class="energy-summary">
+                    {{ formatEnergyLevels(partner.lastSentEnergy) }}
+                  </span>
                 </template>
                 <span v-else class="stat-detail">
                   <template v-if="partner.lastSentAt">
                     <span class="stat-value">{{ getMoodEmoji(partner.lastSentMood ?? 'none') }}</span>
                     <span class="stat-time">{{ formatEventTime(partner.lastSentAt) }}</span>
+                    <span v-if="partner.lastSentEnergy" class="energy-summary">
+                      {{ formatEnergyLevels(partner.lastSentEnergy) }}
+                    </span>
                   </template>
                   <template v-else>No events yet</template>
                 </span>
@@ -405,6 +549,9 @@
                 <div style="font-size: 14px;">
                   <strong>{{ item.direction === 'sent' ? 'Sent' : 'Received' }}</strong>
                   {{ item.direction === 'sent' ? `to ${item.partnerUsername}` : `from ${item.partnerUsername}` }}
+                  <div v-if="item.energy" class="energy-summary event-energy-summary">
+                    {{ formatEnergyLevels(item.energy) }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -515,6 +662,10 @@ const isDeleteAccountBusy = ref(false);
 const isMoodPreferencesBusy = ref(false);
 const isDashboardPreferenceBusy = ref(false);
 const dashboardDisplayMode = ref<DashboardDisplayMode>('counts');
+const energyLevels = ref<EnergyLevels>({ body: 50, mind: 50, heart: 50 });
+const activeEnergyInfo = ref<EnergyKey | null>(null);
+const isEnergyPreferencesBusy = ref(false);
+const energyLevelsDirty = ref(false);
 
 const currentStatsConnectionId = ref<string>('');
 const statsTitle = ref('Statistics');
@@ -537,6 +688,7 @@ let isWebSocketConnected = false;
 let pushInitialized = false;
 let refreshInFlight: Promise<boolean> | null = null;
 let lastNativeForegroundSyncAt = 0;
+let energySaveSequence = 0;
 
 const DEFAULT_MOOD_CATALOG: MoodOption[] = [
   { value: 'happy', emoji: '\uD83D\uDE0A', label: 'Happy' },
@@ -574,6 +726,11 @@ const moodLookup = computed<Record<string, MoodOption>>(() => {
   }, {});
 });
 const newsItems: NewsItem[] = [
+  {
+    date: 'May 2026',
+    title: 'Energy Levels Add More Context',
+    description: 'Set your current Body, Mind, and Heart energy in the dashboard. When you send an emoji, those energy levels are shared as extra context.'
+  },
   {
     date: 'Apr 2026',
     title: 'Account Deletion Is Now Available',
@@ -671,6 +828,7 @@ onMounted(async () => {
   if (isAuthenticated.value) {
     await loadMoodPreferences();
     await loadDashboardPreference();
+    await loadEnergyLevels();
     showDashboard();
     connectWebSocket();
     // Initialize push only on native platforms and once per session.
@@ -873,6 +1031,7 @@ async function login() {
       persistSession(data);
       await loadMoodPreferences();
       await loadDashboardPreference();
+      await loadEnergyLevels();
       showDashboard();
       connectWebSocket();
       // Attempt push registration right after login.
@@ -949,6 +1108,9 @@ function logout(callServer = true) {
   favoriteMoods.value = [...DEFAULT_FAVORITE_MOODS];
   maxFavoriteMoods.value = 8;
   dashboardDisplayMode.value = 'counts';
+  energyLevels.value = { body: 50, mind: 50, heart: 50 };
+  activeEnergyInfo.value = null;
+  energyLevelsDirty.value = false;
   lastNativeForegroundSyncAt = 0;
 }
 
@@ -1073,6 +1235,62 @@ async function loadDashboardPreference() {
 
   const data = (await res.json()) as DashboardPreferenceDTO;
   dashboardDisplayMode.value = data.mode === 'last_event' ? 'last_event' : 'counts';
+}
+
+async function loadEnergyLevels() {
+  const res = await apiFetch('/api/users/preferences/energy');
+  if (!res || !res.ok) {
+    energyLevels.value = { body: 50, mind: 50, heart: 50 };
+    energyLevelsDirty.value = false;
+    return;
+  }
+
+  const data = (await res.json()) as EnergyLevels;
+  energyLevels.value = normalizeEnergyLevels(data);
+  energyLevelsDirty.value = false;
+}
+
+function markEnergyLevelsDirty() {
+  energyLevels.value = normalizeEnergyLevels(energyLevels.value);
+  energyLevelsDirty.value = true;
+}
+
+function toggleEnergyInfo(key: EnergyKey) {
+  activeEnergyInfo.value = activeEnergyInfo.value === key ? null : key;
+}
+
+async function saveEnergyLevels(showSuccessToast = true) {
+  const normalized = normalizeEnergyLevels(energyLevels.value);
+  const saveId = ++energySaveSequence;
+  energyLevels.value = normalized;
+  isEnergyPreferencesBusy.value = true;
+  try {
+    const res = await apiFetch('/api/users/preferences/energy', {
+      method: 'PUT',
+      body: JSON.stringify(normalized)
+    });
+    if (!res) return false;
+
+    if (res.ok) {
+      const data = (await res.json()) as EnergyLevels;
+      if (saveId === energySaveSequence) {
+        energyLevels.value = normalizeEnergyLevels(data);
+        energyLevelsDirty.value = false;
+      }
+      if (showSuccessToast) {
+        showToast('Energy levels saved.', 'success');
+      }
+      return true;
+    }
+
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    showToast(body?.error ?? 'Failed to save energy levels.', 'error');
+    return false;
+  } finally {
+    if (saveId === energySaveSequence) {
+      isEnergyPreferencesBusy.value = false;
+    }
+  }
 }
 
 async function saveDashboardPreference() {
@@ -1229,9 +1447,17 @@ async function deleteConnection(id: string) {
 
 async function think(id: string) {
   const mood = selectedMoods.value[id] ?? 'none';
+  if (energyLevelsDirty.value) {
+    const saved = await saveEnergyLevels(false);
+    if (!saved) {
+      showToast('Save energy levels before sending a thought.', 'error');
+      return;
+    }
+  }
   debugLog('Sending thought', {
     connectionId: id,
     mood,
+    energy: energyLevels.value,
     username: currentUsername.value
   });
   const res = await apiFetch(`/api/connections/${id}/think`, {
@@ -1247,7 +1473,8 @@ async function think(id: string) {
       ...partner,
       sentClicks: partner.sentClicks + 1,
       lastSentMood: mood,
-      lastSentAt: occurredAt
+      lastSentAt: occurredAt,
+      lastSentEnergy: { ...energyLevels.value }
     };
   });
 
@@ -1327,7 +1554,8 @@ function connectWebSocket() {
               ...partner,
               receivedClicks: partner.receivedClicks + 1,
               lastReceivedMood: thought.mood,
-              lastReceivedAt: occurredAt
+              lastReceivedAt: occurredAt,
+              lastReceivedEnergy: thought.energy ?? partner.lastReceivedEnergy
             };
           });
           debugLog('Applied incoming thought update locally', {
@@ -1544,6 +1772,37 @@ function getMoodLabel(mood: string) {
   return moodLookup.value[mood]?.label ?? 'Neutral';
 }
 
+function formatEnergyLevels(levels: EnergyLevels) {
+  return `\uD83D\uDCAA ${levels.body} / \uD83E\uDDE0 ${levels.mind} / \u2764\uFE0F ${levels.heart}`;
+}
+
+function normalizeEnergyLevels(levels: Partial<EnergyLevels> | null | undefined): EnergyLevels {
+  return {
+    body: normalizeEnergyLevel(levels?.body),
+    mind: normalizeEnergyLevel(levels?.mind),
+    heart: normalizeEnergyLevel(levels?.heart)
+  };
+}
+
+function normalizeEnergyLevel(value: unknown) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 50;
+  }
+  return Math.max(0, Math.min(100, Math.round(numeric)));
+}
+
+function energyLevelColor(value: number) {
+  const normalized = normalizeEnergyLevel(value);
+  if (normalized <= 33) {
+    return '#f02849';
+  }
+  if (normalized <= 66) {
+    return '#ff8a00';
+  }
+  return '#2f9e44';
+}
+
 function formatEventTime(occurredAt: string) {
   return new Date(occurredAt).toLocaleString();
 }
@@ -1695,6 +1954,8 @@ interface ConnectionDTO {
   lastSentMood?: string | null;
   lastReceivedAt?: string | null;
   lastSentAt?: string | null;
+  lastReceivedEnergy?: EnergyLevels | null;
+  lastSentEnergy?: EnergyLevels | null;
 }
 
 type Mood = string;
@@ -1709,7 +1970,16 @@ interface ThoughtMessage {
   sender: string;
   mood: Mood;
   emoji: string;
+  energy?: EnergyLevels;
 }
+
+interface EnergyLevels {
+  body: number;
+  mind: number;
+  heart: number;
+}
+
+type EnergyKey = keyof EnergyLevels;
 
 interface ToastItem {
   id: number;
@@ -1737,6 +2007,7 @@ interface EventLogItemDTO {
   partnerUsername: string;
   direction: 'sent' | 'received';
   mood: string;
+  energy?: EnergyLevels | null;
   occurredAt: string;
 }
 

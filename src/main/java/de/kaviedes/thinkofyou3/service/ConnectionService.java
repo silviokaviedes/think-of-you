@@ -1,6 +1,7 @@
 package de.kaviedes.thinkofyou3.service;
 
 import de.kaviedes.thinkofyou3.dto.ConnectionDTO;
+import de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO;
 import de.kaviedes.thinkofyou3.model.Connection;
 import de.kaviedes.thinkofyou3.model.Mood;
 import de.kaviedes.thinkofyou3.model.ThoughtEvent;
@@ -153,6 +154,7 @@ public class ConnectionService {
         if (c.getStatus() != Connection.Status.ACCEPTED) throw new RuntimeException("Connection not accepted");
 
         Mood mood = moodValue != null ? Mood.fromValue(moodValue) : Mood.NONE;
+        EnergyLevelsDTO energyLevels = normalizeUserEnergy(user);
 
         String recipientId;
         if (c.getRequesterId().equals(user.getId())) {
@@ -167,15 +169,23 @@ public class ConnectionService {
         c.setUpdatedAt(Instant.now());
         connectionRepository.save(c);
 
-        ThoughtEvent event = new ThoughtEvent(c.getId(), user.getId(), recipientId, mood);
+        ThoughtEvent event = new ThoughtEvent(
+                c.getId(),
+                user.getId(),
+                recipientId,
+                mood,
+                energyLevels.getBody(),
+                energyLevels.getMind(),
+                energyLevels.getHeart());
         thoughtEventRepository.save(event);
 
         // Send specific notification to receiver
         userRepository.findById(recipientId).ifPresent(r -> {
             String moodEmoji = getMoodEmoji(mood);
             messagingTemplate.convertAndSend("/topic/updates/" + r.getUsername(), 
-                String.format("{\"type\":\"thought\",\"sender\":\"%s\",\"mood\":\"%s\",\"emoji\":\"%s\"}", 
-                    username, mood.getValue(), moodEmoji));
+                String.format("{\"type\":\"thought\",\"sender\":\"%s\",\"mood\":\"%s\",\"emoji\":\"%s\",\"energy\":{\"body\":%d,\"mind\":%d,\"heart\":%d}}",
+                    username, mood.getValue(), moodEmoji,
+                    energyLevels.getBody(), energyLevels.getMind(), energyLevels.getHeart()));
         });
 
         // Fire push notification to recipient devices (no-op if FCM isn't configured).
@@ -206,6 +216,8 @@ public class ConnectionService {
 
         Instant lastReceivedAt = lastReceivedEvent != null ? lastReceivedEvent.getOccurredAt() : null;
         Instant lastSentAt = lastSentEvent != null ? lastSentEvent.getOccurredAt() : null;
+        EnergyLevelsDTO lastReceivedEnergy = energyFromEvent(lastReceivedEvent);
+        EnergyLevelsDTO lastSentEnergy = energyFromEvent(lastSentEvent);
 
         return new ConnectionDTO(
                 c.getId(),
@@ -216,7 +228,9 @@ public class ConnectionService {
                 lastReceivedMood,
                 lastSentMood,
                 lastReceivedAt,
-                lastSentAt
+                lastSentAt,
+                lastReceivedEnergy,
+                lastSentEnergy
         );
     }
 
@@ -229,5 +243,42 @@ public class ConnectionService {
             return Mood.NONE.getEmoji();
         }
         return mood.getEmoji();
+    }
+
+    private EnergyLevelsDTO normalizeUserEnergy(User user) {
+        int body = normalizeEnergyLevel(user.getBodyEnergy());
+        int mind = normalizeEnergyLevel(user.getMindEnergy());
+        int heart = normalizeEnergyLevel(user.getHeartEnergy());
+
+        if (!Integer.valueOf(body).equals(user.getBodyEnergy())
+                || !Integer.valueOf(mind).equals(user.getMindEnergy())
+                || !Integer.valueOf(heart).equals(user.getHeartEnergy())) {
+            user.setBodyEnergy(body);
+            user.setMindEnergy(mind);
+            user.setHeartEnergy(heart);
+            userRepository.save(user);
+        }
+
+        return new EnergyLevelsDTO(body, mind, heart);
+    }
+
+    private int normalizeEnergyLevel(Integer value) {
+        if (value == null) {
+            return UserPreferenceService.DEFAULT_ENERGY_LEVEL;
+        }
+        if (value < 0 || value > 100) {
+            return UserPreferenceService.DEFAULT_ENERGY_LEVEL;
+        }
+        return value;
+    }
+
+    private EnergyLevelsDTO energyFromEvent(ThoughtEvent event) {
+        if (event == null
+                || event.getBodyEnergy() == null
+                || event.getMindEnergy() == null
+                || event.getHeartEnergy() == null) {
+            return null;
+        }
+        return new EnergyLevelsDTO(event.getBodyEnergy(), event.getMindEnergy(), event.getHeartEnergy());
     }
 }

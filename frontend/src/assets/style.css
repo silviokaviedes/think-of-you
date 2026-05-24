@@ -335,6 +335,188 @@ button:active {
     font-size: 20px;
 }
 
+.energy-card {
+    padding: 22px;
+}
+
+.energy-card-header {
+    margin-bottom: 12px;
+}
+
+.energy-save-state {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-light);
+}
+
+.energy-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.energy-control {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    padding: 14px;
+    background: #f0f2f5;
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 12px;
+}
+
+.energy-control.active {
+    background: #fff7f8;
+    border-color: rgba(255, 75, 92, 0.28);
+}
+
+.energy-control-main {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+}
+
+.energy-icon-btn {
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border: 1px solid rgba(255, 75, 92, 0.18);
+    border-radius: 50%;
+    background: #ffffff;
+    color: var(--text);
+    font-size: 24px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.energy-icon-btn:hover,
+.energy-icon-btn:focus-visible {
+    transform: translateY(-1px);
+    border-color: var(--primary);
+    box-shadow: 0 6px 16px rgba(255, 75, 92, 0.18);
+    outline: none;
+}
+
+.energy-control.active .energy-icon-btn {
+    border-color: var(--primary);
+}
+
+.energy-copy {
+    min-width: 0;
+    text-align: left;
+}
+
+.energy-control-label,
+.energy-control-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-light);
+}
+
+.energy-control-label {
+    display: block;
+    color: var(--text);
+}
+
+.energy-description {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--text-light);
+}
+
+.energy-control-value {
+    min-width: 34px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--primary);
+    text-align: center;
+}
+
+.energy-slider {
+    position: relative;
+    width: 100%;
+    height: 34px;
+    padding: 0 15px;
+}
+
+.energy-slider-track {
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    top: 9px;
+    height: 16px;
+    border-radius: 999px;
+    background: rgba(255, 75, 92, 0.18);
+    pointer-events: none;
+}
+
+.energy-slider-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--energy-fill, 50%);
+    border-radius: inherit;
+    background: var(--energy-color, var(--primary));
+}
+
+.energy-slider-thumb {
+    position: absolute;
+    left: var(--energy-fill, 50%);
+    top: 50%;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    border: 3px solid #ffffff;
+    background: var(--energy-color, var(--primary));
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.energy-slider input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 34px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    opacity: 0;
+}
+
+.energy-slider input[type="range"]::-webkit-slider-runnable-track {
+    height: 34px;
+}
+
+.energy-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 30px;
+    height: 34px;
+}
+
+.energy-slider input[type="range"]::-moz-range-track {
+    height: 34px;
+}
+
+.energy-slider input[type="range"]::-moz-range-thumb {
+    width: 30px;
+    height: 34px;
+    border: 0;
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -379,6 +561,20 @@ button:active {
 .stat-time {
     display: block;
     margin-top: 2px;
+}
+
+.energy-summary {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-light);
+}
+
+.event-energy-summary {
+    margin-top: 3px;
 }
 
 .last-mood {
@@ -598,6 +794,10 @@ select {
     }
 
     .partners-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .energy-controls {
         grid-template-columns: 1fr;
     }
 

@@ -17,6 +17,9 @@ public class User {
     private String passwordHash;
     private List<String> favoriteMoods;
     private DashboardDisplayMode dashboardDisplayMode;
+    private Integer bodyEnergy;
+    private Integer mindEnergy;
+    private Integer heartEnergy;
     private Instant createdAt;
 
     public User() {}
@@ -26,6 +29,9 @@ public class User {
         this.passwordHash = passwordHash;
         this.favoriteMoods = new ArrayList<>(Mood.defaultFavorites());
         this.dashboardDisplayMode = DashboardDisplayMode.COUNTS;
+        this.bodyEnergy = 50;
+        this.mindEnergy = 50;
+        this.heartEnergy = 50;
         this.createdAt = Instant.now();
     }
 
@@ -39,6 +45,12 @@ public class User {
     public void setFavoriteMoods(List<String> favoriteMoods) { this.favoriteMoods = favoriteMoods; }
     public DashboardDisplayMode getDashboardDisplayMode() { return dashboardDisplayMode; }
     public void setDashboardDisplayMode(DashboardDisplayMode dashboardDisplayMode) { this.dashboardDisplayMode = dashboardDisplayMode; }
+    public Integer getBodyEnergy() { return bodyEnergy; }
+    public void setBodyEnergy(Integer bodyEnergy) { this.bodyEnergy = bodyEnergy; }
+    public Integer getMindEnergy() { return mindEnergy; }
+    public void setMindEnergy(Integer mindEnergy) { this.mindEnergy = mindEnergy; }
+    public Integer getHeartEnergy() { return heartEnergy; }
+    public void setHeartEnergy(Integer heartEnergy) { this.heartEnergy = heartEnergy; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

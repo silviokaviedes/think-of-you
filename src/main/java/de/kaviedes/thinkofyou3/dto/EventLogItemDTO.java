@@ -7,16 +7,23 @@ public class EventLogItemDTO {
     private String partnerUsername;
     private String direction;
     private String mood;
+    private EnergyLevelsDTO energy;
     private Instant occurredAt;
 
     public EventLogItemDTO() {
     }
 
     public EventLogItemDTO(String connectionId, String partnerUsername, String direction, String mood, Instant occurredAt) {
+        this(connectionId, partnerUsername, direction, mood, null, occurredAt);
+    }
+
+    public EventLogItemDTO(String connectionId, String partnerUsername, String direction, String mood,
+                           EnergyLevelsDTO energy, Instant occurredAt) {
         this.connectionId = connectionId;
         this.partnerUsername = partnerUsername;
         this.direction = direction;
         this.mood = mood;
+        this.energy = energy;
         this.occurredAt = occurredAt;
     }
 
@@ -50,6 +57,14 @@ public class EventLogItemDTO {
 
     public void setMood(String mood) {
         this.mood = mood;
+    }
+
+    public EnergyLevelsDTO getEnergy() {
+        return energy;
+    }
+
+    public void setEnergy(EnergyLevelsDTO energy) {
+        this.energy = energy;
     }
 
     public Instant getOccurredAt() {

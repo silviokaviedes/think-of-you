@@ -47,6 +47,9 @@ class EventLogServiceTest {
         ThoughtEvent sent = new ThoughtEvent("c1", "u1", "u2", Mood.HAPPY);
         sent.setOccurredAt(Instant.parse("2026-01-01T10:00:00Z"));
         ThoughtEvent received = new ThoughtEvent("c1", "u2", "u1", Mood.LOVE);
+        received.setBodyEnergy(12);
+        received.setMindEnergy(34);
+        received.setHeartEnergy(56);
         received.setOccurredAt(Instant.parse("2026-01-01T11:00:00Z"));
 
         when(userRepository.findByUsername("alice")).thenReturn(Optional.of(alice));
@@ -59,6 +62,9 @@ class EventLogServiceTest {
         assertThat(events).hasSize(1);
         assertThat(events.get(0).getDirection()).isEqualTo("received");
         assertThat(events.get(0).getPartnerUsername()).isEqualTo("bob");
+        assertThat(events.get(0).getEnergy().getBody()).isEqualTo(12);
+        assertThat(events.get(0).getEnergy().getMind()).isEqualTo(34);
+        assertThat(events.get(0).getEnergy().getHeart()).isEqualTo(56);
     }
 
     @Test

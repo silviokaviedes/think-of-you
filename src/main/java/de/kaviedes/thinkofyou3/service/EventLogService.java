@@ -1,6 +1,7 @@
 package de.kaviedes.thinkofyou3.service;
 
 import de.kaviedes.thinkofyou3.dto.EventLogItemDTO;
+import de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO;
 import de.kaviedes.thinkofyou3.model.Connection;
 import de.kaviedes.thinkofyou3.model.ThoughtEvent;
 import de.kaviedes.thinkofyou3.model.User;
@@ -90,7 +91,15 @@ public class EventLogService {
                 partnerUsername,
                 sent ? "sent" : "received",
                 mood,
+                energyFromEvent(event),
                 event.getOccurredAt());
+    }
+
+    private EnergyLevelsDTO energyFromEvent(ThoughtEvent event) {
+        if (event.getBodyEnergy() == null || event.getMindEnergy() == null || event.getHeartEnergy() == null) {
+            return null;
+        }
+        return new EnergyLevelsDTO(event.getBodyEnergy(), event.getMindEnergy(), event.getHeartEnergy());
     }
 
     private int normalizeLimit(Integer limit) {

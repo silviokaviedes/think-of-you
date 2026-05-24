@@ -34,6 +34,14 @@ async function loginViaStorage(page: any, token: string, username: string) {
   await expect(page.locator('#dashboard-section')).toBeVisible();
 }
 
+async function setRangeValue(locator: any, value: number) {
+  await locator.evaluate((input: HTMLInputElement, nextValue: number) => {
+    input.value = String(nextValue);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }, value);
+}
+
 test('User can register and login', async ({ page }) => {
   const username = uniqueUser('user');
 
@@ -131,6 +139,62 @@ test('User can accept a request and send a thought with mood', async ({ page, re
 
   await expect(page.locator('#toast-container')).toContainText('Sent a thought');
   await expect(sentCount).toHaveText('1');
+});
+
+test('User can send current energy levels with a mood', async ({ page, request, browser }) => {
+  const sender = uniqueUser('energy-sender');
+  const receiver = uniqueUser('energy-receiver');
+
+  await registerUser(request, sender, password);
+  await registerUser(request, receiver, password);
+
+  const senderAuth = await loginUser(request, sender, password);
+  const receiverAuth = await loginUser(request, receiver, password);
+
+  await request.post('/api/connections/request', {
+    data: { username: receiver },
+    headers: { Authorization: `Bearer ${senderAuth.token}` }
+  });
+
+  const pendingRes = await request.get('/api/connections/requests', {
+    headers: { Authorization: `Bearer ${receiverAuth.token}` }
+  });
+  const pending = (await pendingRes.json()) as Array<{ id: string; partnerUsername: string }>;
+  const match = pending.find((item) => item.partnerUsername === sender);
+  expect(match).toBeTruthy();
+
+  await request.post(`/api/connections/${match!.id}/accept`, {
+    headers: { Authorization: `Bearer ${receiverAuth.token}` }
+  });
+
+  await loginViaStorage(page, senderAuth.token, senderAuth.username);
+  await page.getByRole('button', { name: 'Show body energy description' }).click();
+  await expect(page.locator('#dashboard-section')).toContainText('Physical strength, rest, and body tension right now.');
+  await setRangeValue(page.getByLabel('Body energy'), 22);
+  await setRangeValue(page.getByLabel('Mind energy'), 63);
+  await setRangeValue(page.getByLabel('Heart energy'), 88);
+
+  const senderPartnerCard = page.locator('.partner-card').filter({ hasText: receiver });
+  await expect(senderPartnerCard).toBeVisible();
+  await senderPartnerCard.getByRole('button', { name: 'Love' }).click();
+  await senderPartnerCard.getByRole('button', { name: "I'm thinking of you!" }).click();
+
+  await expect(page.locator('#toast-container')).toContainText('Sent a thought');
+  await expect(
+    senderPartnerCard.locator('.stat-item').filter({ hasText: 'Sent' })
+  ).toContainText('💪 22 / 🧠 63 / ❤️ 88');
+  await page.getByRole('button', { name: 'Event Log' }).first().click();
+  await expect(page.locator('#event-log-section')).toContainText('💪 22 / 🧠 63 / ❤️ 88');
+
+  const receiverPage = await browser.newPage();
+  await loginViaStorage(receiverPage, receiverAuth.token, receiverAuth.username);
+
+  const receiverPartnerCard = receiverPage.locator('.partner-card').filter({ hasText: sender });
+  await expect(receiverPartnerCard).toBeVisible();
+  await expect(
+    receiverPartnerCard.locator('.stat-item').filter({ hasText: 'Received' })
+  ).toContainText('💪 22 / 🧠 63 / ❤️ 88');
+  await receiverPage.close();
 });
 
 test('User can view mood statistics for a connection', async ({ page, request }) => {
