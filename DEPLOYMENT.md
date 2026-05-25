@@ -41,42 +41,39 @@ For this project's Railway deployment, `FIREBASE_SERVICE_ACCOUNT_BASE64` has bee
 
 ### Recovery Email Sending on Railway
 
-The app sends recovery-code emails through SMTP. On Railway, SMTP outbound traffic is available only on the **Pro plan and above**. Railway disables SMTP on Free, Trial, and Hobby plans to reduce spam and abuse. If the project is on Free, Trial, or Hobby, recovery email sending will not work with the current SMTP implementation even if the variables below are set.
+The app sends recovery-code emails through the **Resend HTTPS API**, not SMTP. This works on Railway Free/Hobby because it uses normal outbound HTTPS instead of blocked SMTP ports.
 
-To make recovery email sending work on Railway with the current app:
+To make recovery email sending work on Railway:
 
-1. Make sure the Railway project is on **Pro or above**.
-2. Create SMTP credentials at your email provider. Use a real transactional email provider or mailbox provider that gives you:
-   - SMTP host
-   - SMTP port
-   - SMTP username
-   - SMTP password or app password
-   - a verified sender address
-3. In Railway, open the project.
-4. Select the deployed app service, not the MongoDB service.
-5. Open the **Variables** tab.
-6. Add these variables:
+1. Create a Resend account at `https://resend.com`.
+2. In Resend, verify the sender domain or sender address you want to use.
+3. In Resend, create an API key.
+4. In Railway, open the project.
+5. Select the deployed app service, not the MongoDB service.
+6. Open the **Variables** tab.
+7. Add these variables:
 
 | Variable Name | Value |
 | :--- | :--- |
 | `RECOVERY_MAIL_ENABLED` | `true` |
-| `RECOVERY_MAIL_FROM` | The verified sender address, for example `Thinking of You <noreply@your-domain.com>` or `noreply@your-domain.com` |
-| `SMTP_HOST` | Your provider's SMTP host, for example `smtp.example.com` |
-| `SMTP_PORT` | Usually `587` for STARTTLS, or the port your provider gives you |
-| `SMTP_USERNAME` | Your SMTP username |
-| `SMTP_PASSWORD` | Your SMTP password or app password |
-| `SMTP_AUTH` | `true` |
-| `SMTP_STARTTLS` | `true` when using port `587`; use your provider's documented value if different |
+| `RECOVERY_MAIL_FROM` | A verified Resend sender, for example `Thinking of You <noreply@your-domain.com>` or `noreply@your-domain.com` |
+| `RESEND_API_KEY` | The Resend API key |
 
-7. Seal `SMTP_PASSWORD` in Railway:
-   - In the Variables tab, find `SMTP_PASSWORD`.
+Optional:
+
+| Variable Name | Value |
+| :--- | :--- |
+| `RESEND_API_URL` | Leave unset unless you need to override the default `https://api.resend.com/emails` |
+
+8. Seal `RESEND_API_KEY` in Railway:
+   - In the Variables tab, find `RESEND_API_KEY`.
    - Open its menu.
    - Choose **Seal** so the value cannot be viewed later in the Railway UI.
-8. Redeploy the app service:
+9. Redeploy the app service:
    - Open the service **Deployments** tab.
    - Trigger a redeploy, or push a new commit.
    - Railway applies changed variables only after a new deployment.
-9. Verify the flow:
+10. Verify the flow:
    - Open the deployed app.
    - Register a test account.
    - After pressing **Register**, enter a test email in the recovery-code delivery step.
@@ -85,9 +82,9 @@ To make recovery email sending work on Railway with the current app:
    - If it fails, check the Railway deployment logs for `Failed to send recovery email`.
 
 Important notes:
-- The app does not store the recovery email address in MongoDB. It only passes the address to the configured SMTP provider for that one email.
+- The app does not store the recovery email address in MongoDB. It only passes the address to Resend for that one email.
 - The app intentionally does not log the submitted recovery email address or the recovery code.
-- If you are on Railway Free, Trial, or Hobby and need this feature without upgrading to Pro, the app must be changed to use an HTTPS email provider API such as Resend, SendGrid, Mailgun, or Postmark instead of SMTP.
+- Resend requires the `RECOVERY_MAIL_FROM` sender to be verified in Resend before production sending works.
 
 ### Firebase / Android Build Note
 
@@ -145,4 +142,4 @@ Railway allows you to use your own domain (e.g., `www.yourdomain.com`) instead o
 
 *   **WebSocket Connection Issues**: Railway supports WebSockets natively. If you use a custom domain later, ensure your SSL/TLS settings don't block `wss://` traffic.
 *   **Startup Failures**: Check the "Deployments" logs in Railway. Ensure `SPRING_DATA_MONGODB_URI` is correct and Atlas allows the connection.
-*   **Recovery emails do not send**: Confirm the Railway project is on Pro or above, `RECOVERY_MAIL_ENABLED=true`, SMTP variables are set on the app service, and the app was redeployed after the variables changed. Railway Free, Trial, and Hobby plans do not support SMTP for this app's current mail implementation.
+*   **Recovery emails do not send**: Confirm `RECOVERY_MAIL_ENABLED=true`, `RECOVERY_MAIL_FROM` is verified in Resend, `RESEND_API_KEY` is set on the app service, and the app was redeployed after the variables changed. Check both Railway deployment logs and Resend email logs.

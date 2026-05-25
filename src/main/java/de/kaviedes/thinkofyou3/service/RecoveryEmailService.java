@@ -1,47 +1,59 @@
 package de.kaviedes.thinkofyou3.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class RecoveryEmailService {
-    private final JavaMailSender mailSender;
     private final boolean enabled;
     private final String fromAddress;
+    private final String resendApiKey;
+    private final RestClient restClient;
 
-    public RecoveryEmailService(JavaMailSender mailSender,
+    public RecoveryEmailService(RestClient.Builder restClientBuilder,
                                 @Value("${app.recovery.mail.enabled:false}") boolean enabled,
-                                @Value("${app.recovery.mail.from:noreply@think-of-you.local}") String fromAddress) {
-        this.mailSender = mailSender;
+                                @Value("${app.recovery.mail.from:noreply@think-of-you.local}") String fromAddress,
+                                @Value("${app.recovery.mail.resend-api-key:}") String resendApiKey,
+                                @Value("${app.recovery.mail.resend-api-url:https://api.resend.com/emails}") String resendApiUrl) {
         this.enabled = enabled;
         this.fromAddress = fromAddress;
+        this.resendApiKey = resendApiKey;
+        this.restClient = restClientBuilder.baseUrl(resendApiUrl).build();
     }
 
     public void sendRecoveryCode(String toAddress, String username, String recoveryCode) {
         String normalizedAddress = normalizeEmail(toAddress);
-        if (!enabled) {
+        if (!enabled || resendApiKey == null || resendApiKey.isBlank()) {
             throw new RuntimeException("Recovery email delivery is not configured");
         }
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromAddress);
-        message.setTo(normalizedAddress);
-        message.setSubject("Your Thinking of You recovery code");
-        message.setText("""
-                A recovery code was requested for your Thinking of You account.
+        Map<String, Object> request = Map.of(
+                "from", fromAddress,
+                "to", List.of(normalizedAddress),
+                "subject", "Your Thinking of You recovery code",
+                "text", """
+                        A recovery code was requested for your Thinking of You account.
 
-                Username: %s
-                Recovery code: %s
+                        Username: %s
+                        Recovery code: %s
 
-                Keep this code private. The app does not store this email address.
-                """.formatted(username, recoveryCode));
+                        Keep this code private. The app does not store this email address.
+                        """.formatted(username, recoveryCode)
+        );
 
         try {
-            mailSender.send(message);
-        } catch (MailException ex) {
+            restClient.post()
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + resendApiKey)
+                    .body(request)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientException ex) {
             throw new RuntimeException("Failed to send recovery email");
         }
     }

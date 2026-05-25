@@ -329,8 +329,9 @@ The published pages use `thinkingofyou@kaviedes.de` as the public privacy/suppor
 ## Environment Variables
 - `MONGO_HOST`: Hostname of the MongoDB server (default: localhost).
 - `RECOVERY_MAIL_ENABLED`: Set to `true` to allow recovery-code emails (default: `false`).
-- `RECOVERY_MAIL_FROM`: Sender address for recovery-code emails.
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS`: SMTP settings for recovery-code email delivery.
+- `RECOVERY_MAIL_FROM`: Verified Resend sender address for recovery-code emails.
+- `RESEND_API_KEY`: Resend API key used for recovery-code email delivery over HTTPS.
+- `RESEND_API_URL`: Optional override for the Resend email API endpoint (default: `https://api.resend.com/emails`).
 - `FIREBASE_SERVICE_ACCOUNT_BASE64`: Base64-encoded Firebase service account JSON for FCM.
 - `FIREBASE_SERVICE_ACCOUNT_PATH`: Path to Firebase service account JSON (alternative to base64).
 - `GOOGLE_APPLICATION_CREDENTIALS`: Standard Firebase credentials path (fallback).

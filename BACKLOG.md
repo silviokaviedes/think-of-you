@@ -8,7 +8,7 @@ Users can recover an account without requiring a persisted email address. The ap
 
 #### Todos
 
-- [x] Add SMTP-based email delivery using Spring Boot Mail and environment-based configuration.
+- [x] Add Resend HTTPS API email delivery using environment-based configuration.
 - [x] Add recovery-code fields to the user model: hashed recovery code, creation timestamp, and last-rotated timestamp.
 - [x] Generate a secure recovery code during registration.
 - [x] Store only the recovery-code hash in MongoDB; never store the raw recovery code.
