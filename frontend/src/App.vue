@@ -68,6 +68,7 @@
           <p style="color: var(--text-light); margin-bottom: 20px;">Connect with your loved ones.</p>
           <input v-model.trim="authUsername" type="text" placeholder="Username" />
           <input v-model.trim="authPassword" type="password" placeholder="Password" />
+          <input v-model.trim="authPasswordConfirmation" type="password" placeholder="Repeat password for registration" />
           <div class="button-group" style="margin-top: 20px;">
             <button style="flex: 2" :disabled="isAuthBusy" @click="login">Login</button>
             <button class="secondary-btn" style="flex: 1" :disabled="isAuthBusy" @click="register">Register</button>
@@ -639,6 +640,7 @@ const isMenuOpen = ref(false);
 
 const authUsername = ref('');
 const authPassword = ref('');
+const authPasswordConfirmation = ref('');
 const isAuthBusy = ref(false);
 
 const partners = ref<ConnectionDTO[]>([]);
@@ -1049,8 +1051,13 @@ async function login() {
 }
 
 async function register() {
-  if (!authUsername.value || !authPassword.value) {
-    showToast('Please enter credentials', 'error');
+  if (!authUsername.value || !authPassword.value || !authPasswordConfirmation.value) {
+    showToast('Please enter username, password, and repeated password.', 'error');
+    return;
+  }
+
+  if (authPassword.value !== authPasswordConfirmation.value) {
+    showToast('Passwords do not match.', 'error');
     return;
   }
 

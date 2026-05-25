@@ -8,6 +8,7 @@ A web application for couples (including polyamorous relationships) to non-verba
 - **Real-time Interaction**: Click a button to send a thought, recipient sees the counter increase in real-time via WebSockets.
 - **Instant Notifications**: Both sender and receiver get immediate notifications when thoughts are sent, including mood context.
 - **Mood Support**: Optionally add a mood (happy, sad, angry, love, excited, worried, grateful, or neutral) to each thought.
+- **My Energy**: Set Body, Mind, and Heart energy levels and send that context together with each emoji thought.
 - **Enhanced Statistics**: View click history over time (1, 7, 30 days) with adjustable granularity and mood distribution visualization.
 - **Mood Analytics**: Stacked bar charts showing mood patterns and summary statistics for emotional insights.
 - **Per-Connection Stats Switching**: Switch the statistics view between partners.
@@ -307,7 +308,7 @@ The published pages use `thinkingofyou@kaviedes.de` as the public privacy/suppor
 - `GET /api/connections/requests`: Get pending requests
 - `POST /api/connections/{id}/accept`: Accept request
 - `POST /api/connections/{id}/reject`: Reject request
-- `POST /api/connections/{id}/think`: { mood } - Send a thought with optional mood (happy, sad, angry, love, excited, worried, grateful, none)
+- `POST /api/connections/{id}/think`: { mood } - Send a thought with optional mood (happy, sad, angry, love, excited, worried, grateful, none) and the sender's saved energy snapshot
 - `DELETE /api/connections/{id}`: Disconnect
 - `GET /api/metrics?connectionId=...&from=...&to=...&bucketMinutes=...&direction=received|sent`: Get statistics
 - `GET /api/metrics/moods?connectionId=...&from=...&to=...&bucketMinutes=...&direction=received|sent`: Get mood-based statistics with distribution data
@@ -317,6 +318,8 @@ The published pages use `thinkingofyou@kaviedes.de` as the public privacy/suppor
 - `PUT /api/users/preferences/moods`: { favoriteMoods } - Update favorite mood buttons (max 8)
 - `GET /api/users/preferences/dashboard`: Get dashboard display mode (`counts` or `last_event`)
 - `PUT /api/users/preferences/dashboard`: { mode } - Update dashboard display mode
+- `GET /api/users/preferences/energy`: Get the user's Body, Mind, and Heart energy levels
+- `PUT /api/users/preferences/energy`: { body, mind, heart } - Update energy levels, each from 0 to 100
 
 ## Environment Variables
 - `MONGO_HOST`: Hostname of the MongoDB server (default: localhost).
@@ -337,6 +340,12 @@ The published pages use `thinkingofyou@kaviedes.de` as the public privacy/suppor
 - **Counts Mode**: Shows total sent and received counts per connection.
 - **Last Event Mode**: Hides totals and shows only the latest event timestamp and emoji for sent/received.
 - **Profile Control**: Each user can switch this behavior from the Profile page.
+
+### My Energy
+- **Energy Sliders**: The dashboard lets each user set Body, Mind, and Heart energy from 0 to 100.
+- **Thought Context**: When a user sends an emoji thought, the current saved energy levels are stored with that thought and shown to both sender and receiver.
+- **History Display**: Dashboard cards and the Event Log show the latest energy snapshot alongside the sent or received mood.
+- **News Visibility**: The News tab highlights the energy feature and is available even before login.
 
 ### Design System
 - **Modern Glass-morphism**: Frosted glass effect with backdrop blur
@@ -400,6 +409,7 @@ The application features a comprehensive notification system for real-time engag
 - **Bidirectional Notifications**: Both sender and receiver receive immediate feedback for every interaction
 - **Thought Tracking**: Click counter to track "thinking of you" interactions between partners
 - **Mood Expression**: Add emotional context to thoughts with a larger emoji set and configurable favorites
+- **Energy Context**: Share current Body, Mind, and Heart energy levels together with mood-based thoughts
 - **Relationship Analytics**: View statistics of thought exchanges over customizable time periods
 - **Mood Analytics**: Visualize emotional patterns with stacked bar charts and mood distribution summaries
 - **Multi-partner Support**: Supports polyamorous relationships with multiple simultaneous connections
@@ -414,13 +424,13 @@ The application features a comprehensive notification system for real-time engag
 - **JWT Authentication**: Stateless authentication mechanism
 
 ### Data Models
-- **User**: Stores username, password hash, and creation timestamp
-- **User Preferences**: Stores favorite moods and dashboard display mode (`counts` or `last_event`)
+- **User**: Stores username, password hash, current energy levels, and creation timestamp
+- **User Preferences**: Stores favorite moods, dashboard display mode (`counts` or `last_event`), and Body/Mind/Heart energy levels
 - **Connection**: Manages relationship status between users with bidirectional counters
-- **ThoughtEvent**: Logs individual "thinking of you" events with timestamps and mood
+- **ThoughtEvent**: Logs individual "thinking of you" events with timestamps, mood, and the sender's energy snapshot
 - **Mood**: Enum with an expanded mood set (including hug and exhausted)
 - **MoodMetricsDTO**: Data transfer object containing time-bucketed mood distributions and total mood counts
-- **ConnectionDTO**: Includes counts, last sent/received mood, and last sent/received timestamp
+- **ConnectionDTO**: Includes counts, last sent/received mood, last sent/received timestamp, and last sent/received energy snapshot
 
 ### Security Features
 - Password hashing with Spring Security

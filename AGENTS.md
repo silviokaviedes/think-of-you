@@ -17,6 +17,9 @@ Use these rules whenever an LLM is operating in this repo.
 - If you can’t run tests, state what was skipped and why.
 - Summarize modified files and key behavior changes.
 
+## Playwright MCP testing
+- When using the Playwright MCP server to navigate and test the app, create or use two accounts that are connected to each other. Otherwise, the dashboard will not show any connections.
+
 ## Communication
 - Ask clarifying questions when requirements are ambiguous.
 - State assumptions explicitly.

@@ -47,7 +47,12 @@ test('User can register and login', async ({ page }) => {
 
   await page.goto('/');
   await page.getByPlaceholder('Username').fill(username);
-  await page.getByPlaceholder('Password').fill(password);
+  await page.getByPlaceholder('Password', { exact: true }).fill(password);
+  await page.getByPlaceholder('Repeat password for registration').fill(`${password}x`);
+  await page.getByRole('button', { name: 'Register' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Passwords do not match');
+
+  await page.getByPlaceholder('Repeat password for registration').fill(password);
   await page.getByRole('button', { name: 'Register' }).click();
   await expect(page.locator('#toast-container')).toContainText('Registered successfully');
 
@@ -287,7 +292,8 @@ test('User can change password from profile', async ({ page }) => {
 
   await page.goto('/');
   await page.getByPlaceholder('Username').fill(username);
-  await page.getByPlaceholder('Password').fill(oldPassword);
+  await page.getByPlaceholder('Password', { exact: true }).fill(oldPassword);
+  await page.getByPlaceholder('Repeat password for registration').fill(oldPassword);
   await page.getByRole('button', { name: 'Register' }).click();
   await expect(page.locator('#toast-container')).toContainText('Registered successfully');
 
@@ -308,11 +314,11 @@ test('User can change password from profile', async ({ page }) => {
   await expect(page.locator('#auth-section')).toBeVisible();
 
   await page.getByPlaceholder('Username').fill(username);
-  await page.getByPlaceholder('Password').fill(oldPassword);
+  await page.getByPlaceholder('Password', { exact: true }).fill(oldPassword);
   await page.getByRole('button', { name: 'Login' }).click();
   await expect(page.locator('#toast-container')).toContainText('Login failed');
 
-  await page.getByPlaceholder('Password').fill(newPassword);
+  await page.getByPlaceholder('Password', { exact: true }).fill(newPassword);
   await page.getByRole('button', { name: 'Login' }).click();
   await expect(page.locator('#toast-container')).toContainText('Welcome back');
 });
@@ -356,12 +362,12 @@ test('User can delete account from profile and loses access', async ({ page, req
   await expect(page.locator('#toast-container')).toContainText('Your account has been deleted.');
 
   await page.getByPlaceholder('Username').fill(userA);
-  await page.getByPlaceholder('Password').fill(password);
+  await page.getByPlaceholder('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Login' }).click();
   await expect(page.locator('#toast-container')).toContainText('Login failed');
 
   await page.getByPlaceholder('Username').fill(userB);
-  await page.getByPlaceholder('Password').fill(password);
+  await page.getByPlaceholder('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Login' }).click();
   await expect(page.locator('#dashboard-section')).toBeVisible();
   await expect(page.locator('.partner-card').filter({ hasText: userA })).toHaveCount(0);
