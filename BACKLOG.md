@@ -2,6 +2,31 @@
 
 ## Future Features
 
+### Account recovery codes without stored email
+
+Users can recover an account without requiring a persisted email address. The app generates recovery codes, stores only a hash, and can optionally send the raw code to a user-provided email address without saving that email.
+
+#### Todos
+
+- [x] Add SMTP-based email delivery using Spring Boot Mail and environment-based configuration.
+- [x] Add recovery-code fields to the user model: hashed recovery code, creation timestamp, and last-rotated timestamp.
+- [x] Generate a secure recovery code during registration.
+- [x] Store only the recovery-code hash in MongoDB; never store the raw recovery code.
+- [x] Extend registration so users can optionally enter an email address used only to send the recovery code.
+- [x] Do not persist the recovery email address in the app database.
+- [x] Ensure request logging, app logging, and error messages do not print the email address or recovery code.
+- [x] Add a Profile action to generate a new recovery code after confirming the current password.
+- [x] Let Profile users optionally send the newly generated recovery code to a one-time email address.
+- [x] Invalidate the previous recovery code whenever a new one is generated.
+- [x] Add a forgot-password flow using username + recovery code + new password + repeated new password.
+- [x] On successful recovery reset, update the password hash, invalidate the used recovery code, revoke all active refresh tokens, and generate a new recovery code.
+- [x] Add rate limiting or abuse protection for registration recovery emails, Profile recovery emails, and recovery reset attempts.
+- [x] Update the login/register UI with clear copy that email is optional, used only for sending the recovery code, and not stored.
+- [x] Update the Profile UI with recovery-code generation and optional one-time email sending.
+- [x] Update README and privacy policy to explain recovery-code processing and non-persistence of recovery email addresses.
+- [x] Add backend tests for registration recovery-code generation, email send behavior, hash-only persistence, Profile rotation, reset success, reset failure, and token revocation.
+- [x] Add Playwright coverage for registration recovery-code display, Profile recovery-code regeneration, and forgot-password reset.
+
 ### Energy levels sent with emoji
 
 Users can set their current energy levels with three dashboard sliders:

@@ -15,6 +15,9 @@ public class User {
     @Indexed(unique = true)
     private String username;
     private String passwordHash;
+    private String recoveryCodeHash;
+    private Instant recoveryCodeCreatedAt;
+    private Instant recoveryCodeRotatedAt;
     private List<String> favoriteMoods;
     private DashboardDisplayMode dashboardDisplayMode;
     private Integer bodyEnergy;
@@ -41,6 +44,12 @@ public class User {
     public void setUsername(String username) { this.username = username; }
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getRecoveryCodeHash() { return recoveryCodeHash; }
+    public void setRecoveryCodeHash(String recoveryCodeHash) { this.recoveryCodeHash = recoveryCodeHash; }
+    public Instant getRecoveryCodeCreatedAt() { return recoveryCodeCreatedAt; }
+    public void setRecoveryCodeCreatedAt(Instant recoveryCodeCreatedAt) { this.recoveryCodeCreatedAt = recoveryCodeCreatedAt; }
+    public Instant getRecoveryCodeRotatedAt() { return recoveryCodeRotatedAt; }
+    public void setRecoveryCodeRotatedAt(Instant recoveryCodeRotatedAt) { this.recoveryCodeRotatedAt = recoveryCodeRotatedAt; }
     public List<String> getFavoriteMoods() { return favoriteMoods; }
     public void setFavoriteMoods(List<String> favoriteMoods) { this.favoriteMoods = favoriteMoods; }
     public DashboardDisplayMode getDashboardDisplayMode() { return dashboardDisplayMode; }

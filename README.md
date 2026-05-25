@@ -125,17 +125,20 @@ The app uses short-lived access tokens plus long-lived refresh tokens.
 - Refresh token rotation: every successful refresh returns a new refresh token and revokes the old one.
 - Logout: revokes the current refresh token.
 - Password change: revokes all active refresh tokens for that user.
+- Recovery codes: generated at registration and when rotated from Profile; only a hash is stored.
+- Optional recovery email: used only to send the recovery code when requested and not stored by the app.
 
 ### Client behavior
 - On login, client stores `token`, `username`, and `refreshToken`.
 - On app start, if only `refreshToken` is available, client calls `POST /api/auth/refresh` and restores session automatically.
 - On `401`, client tries one silent refresh and retries the original request once before forcing login.
 - Users can delete their account from the Profile screen by confirming their current password and username.
+- Users can reset a forgotten password with username + recovery code + new password.
 
 ### Persistence compatibility
 - Existing collections (`users`, `connections`, `thought_events`, etc.) are unchanged.
 - Session persistence uses a new collection: `refresh_tokens`.
-- No migration is required for existing databases.
+- Existing users without a recovery code can generate one from Profile.
 
 ### Frontend (Vue 3 + TypeScript)
 The frontend source lives in `frontend/` and is built into `src/main/resources/static`.
@@ -298,10 +301,11 @@ The source files live in `frontend/public/`. `npm run build` copies them into `s
 The published pages use `thinkingofyou@kaviedes.de` as the public privacy/support contact and `https://think-of-you-production.up.railway.app/` as the support URL.
 
 ## API Documentation
-- `POST /api/auth/register`: { username, password }
+- `POST /api/auth/register`: { username, password, recoveryEmail? } -> returns `{ recoveryCode, recoveryEmailSent }`; the UI asks for optional recovery email only after the user starts registration, and `recoveryCode` is omitted when it was emailed
 - `POST /api/auth/login`: { username, password } -> returns `{ token, username, refreshToken }`
 - `POST /api/auth/refresh`: { refreshToken } -> returns rotated `{ token, username, refreshToken }`
 - `POST /api/auth/logout`: { refreshToken } -> revokes refresh token
+- `POST /api/auth/recover-password`: { username, recoveryCode, newPassword, confirmPassword } -> resets password, revokes refresh tokens, and returns a new recovery code
 - `GET /api/users/search?username=...`: Search for a user
 - `POST /api/connections/request`: { username } - Request a connection
 - `GET /api/connections`: Get accepted partners
@@ -314,6 +318,7 @@ The published pages use `thinkingofyou@kaviedes.de` as the public privacy/suppor
 - `GET /api/metrics/moods?connectionId=...&from=...&to=...&bucketMinutes=...&direction=received|sent`: Get mood-based statistics with distribution data
 - `POST /api/push/register`: { token, platform } - Register device token for push notifications
 - `DELETE /api/users/account`: { currentPassword } - Permanently delete the authenticated account and associated app data
+- `POST /api/users/recovery-code`: { currentPassword, recoveryEmail? } - Rotate the authenticated user's recovery code and optionally email it without storing the address
 - `GET /api/users/preferences/moods`: Get available moods + user's favorite mood buttons
 - `PUT /api/users/preferences/moods`: { favoriteMoods } - Update favorite mood buttons (max 8)
 - `GET /api/users/preferences/dashboard`: Get dashboard display mode (`counts` or `last_event`)
@@ -323,6 +328,9 @@ The published pages use `thinkingofyou@kaviedes.de` as the public privacy/suppor
 
 ## Environment Variables
 - `MONGO_HOST`: Hostname of the MongoDB server (default: localhost).
+- `RECOVERY_MAIL_ENABLED`: Set to `true` to allow recovery-code emails (default: `false`).
+- `RECOVERY_MAIL_FROM`: Sender address for recovery-code emails.
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_AUTH`, `SMTP_STARTTLS`: SMTP settings for recovery-code email delivery.
 - `FIREBASE_SERVICE_ACCOUNT_BASE64`: Base64-encoded Firebase service account JSON for FCM.
 - `FIREBASE_SERVICE_ACCOUNT_PATH`: Path to Firebase service account JSON (alternative to base64).
 - `GOOGLE_APPLICATION_CREDENTIALS`: Standard Firebase credentials path (fallback).
@@ -424,7 +432,7 @@ The application features a comprehensive notification system for real-time engag
 - **JWT Authentication**: Stateless authentication mechanism
 
 ### Data Models
-- **User**: Stores username, password hash, current energy levels, and creation timestamp
+- **User**: Stores username, password hash, recovery-code hash, current energy levels, and creation timestamp
 - **User Preferences**: Stores favorite moods, dashboard display mode (`counts` or `last_event`), and Body/Mind/Heart energy levels
 - **Connection**: Manages relationship status between users with bidirectional counters
 - **ThoughtEvent**: Logs individual "thinking of you" events with timestamps, mood, and the sender's energy snapshot

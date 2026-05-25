@@ -1,6 +1,7 @@
 package de.kaviedes.thinkofyou3.controller;
 
 import de.kaviedes.thinkofyou3.model.User;
+import de.kaviedes.thinkofyou3.dto.RecoveryCodeResponse;
 import de.kaviedes.thinkofyou3.security.JwtFilter;
 import de.kaviedes.thinkofyou3.service.AccountService;
 import de.kaviedes.thinkofyou3.service.AuthService;
@@ -92,6 +93,33 @@ class UserControllerTest {
                         .principal(new UsernamePasswordAuthenticationToken("alice", "n/a"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"currentPassword\":\"wrong\",\"newPassword\":\"new-secret\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Current password is invalid"));
+    }
+
+    @Test
+    void rotateRecoveryCode_returnsCodeWhenNoEmailProvided() throws Exception {
+        when(authService.rotateRecoveryCode("alice", "secret", null))
+                .thenReturn(new RecoveryCodeResponse("TOY-AAAAA-BBBBB-CCCCC-DDDDD", false));
+
+        mockMvc.perform(post("/api/users/recovery-code")
+                        .principal(new UsernamePasswordAuthenticationToken("alice", "n/a"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"secret\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recoveryCode").value("TOY-AAAAA-BBBBB-CCCCC-DDDDD"))
+                .andExpect(jsonPath("$.recoveryEmailSent").value(false));
+    }
+
+    @Test
+    void rotateRecoveryCode_returnsBadRequestWhenValidationFails() throws Exception {
+        org.mockito.Mockito.doThrow(new RuntimeException("Current password is invalid"))
+                .when(authService).rotateRecoveryCode(anyString(), anyString(), org.mockito.ArgumentMatchers.nullable(String.class));
+
+        mockMvc.perform(post("/api/users/recovery-code")
+                        .principal(new UsernamePasswordAuthenticationToken("alice", "n/a"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"wrong\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Current password is invalid"));
     }

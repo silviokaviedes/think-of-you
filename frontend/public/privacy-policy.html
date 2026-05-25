@@ -91,7 +91,7 @@
     <h2>Data We Collect</h2>
     <p>We collect the following categories of data to operate the app:</p>
     <ul>
-      <li>Account data: username, hashed password, and account creation timestamp.</li>
+      <li>Account data: username, hashed password, hashed recovery code, and account creation timestamp.</li>
       <li>Session and authentication data: access tokens and hashed rotating refresh-token records.</li>
       <li>Relationship and interaction data: connection requests, connection status, thought counts, thought events, moods, event log entries, and statistics.</li>
       <li>User preference data: favorite mood buttons and dashboard display preference.</li>
@@ -103,6 +103,7 @@
     <ul>
       <li>Creating and securing user accounts.</li>
       <li>Authenticating sessions and rotating refresh tokens.</li>
+      <li>Generating recovery codes and optionally sending them to a one-time email address when requested.</li>
       <li>Letting users find each other and manage connections.</li>
       <li>Delivering thoughts, moods, counts, event history, and statistics.</li>
       <li>Sending real-time updates through WebSockets while the app is in use.</li>
@@ -115,7 +116,7 @@
 
     <h2>Where Data Is Stored</h2>
     <p>
-      Application data is stored in MongoDB. Push notifications are sent through Firebase Cloud Messaging. Authentication and app logic run on the application server. Deployment-specific hosting providers may vary.
+      Application data is stored in MongoDB. Recovery email addresses are processed only to send the requested recovery code and are not stored in the app database. Push notifications are sent through Firebase Cloud Messaging. Authentication and app logic run on the application server. Deployment-specific hosting providers may vary.
     </p>
 
     <h2>Data Sharing</h2>
@@ -123,6 +124,7 @@
     <p>We share data only when necessary to operate the service:</p>
     <ul>
       <li>Push notification tokens and notification payload delivery are processed through Firebase Cloud Messaging.</li>
+      <li>Recovery email addresses and recovery-code email content are processed by the configured email delivery provider only when the user requests email delivery.</li>
       <li>Data may be processed by selected infrastructure providers, such as hosting and database providers, acting on behalf of the app operator.</li>
     </ul>
     <p>As of the current implementation, the app does not include advertising SDKs or third-party analytics SDKs.</p>

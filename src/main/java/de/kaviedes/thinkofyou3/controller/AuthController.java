@@ -2,6 +2,7 @@ package de.kaviedes.thinkofyou3.controller;
 
 import de.kaviedes.thinkofyou3.dto.AuthResponse;
 import de.kaviedes.thinkofyou3.dto.LoginRequest;
+import de.kaviedes.thinkofyou3.dto.RecoverPasswordRequest;
 import de.kaviedes.thinkofyou3.dto.RefreshTokenRequest;
 import de.kaviedes.thinkofyou3.service.AuthService;
 import org.springframework.http.HttpStatus;
@@ -21,8 +22,11 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody LoginRequest request) {
-        authService.register(request);
-        return ResponseEntity.ok().build();
+        try {
+            return ResponseEntity.ok(authService.register(request));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
+        }
     }
 
     @PostMapping("/login")
@@ -43,5 +47,14 @@ public class AuthController {
     public ResponseEntity<?> logout(@RequestBody(required = false) RefreshTokenRequest request) {
         authService.logout(request != null ? request.getRefreshToken() : null);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/recover-password")
+    public ResponseEntity<?> recoverPassword(@RequestBody RecoverPasswordRequest request) {
+        try {
+            return ResponseEntity.ok(authService.recoverPassword(request));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
+        }
     }
 }

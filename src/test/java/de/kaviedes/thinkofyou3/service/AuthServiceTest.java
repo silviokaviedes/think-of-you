@@ -1,6 +1,7 @@
 package de.kaviedes.thinkofyou3.service;
 
 import de.kaviedes.thinkofyou3.dto.LoginRequest;
+import de.kaviedes.thinkofyou3.dto.RecoverPasswordRequest;
 import de.kaviedes.thinkofyou3.model.RefreshToken;
 import de.kaviedes.thinkofyou3.model.User;
 import de.kaviedes.thinkofyou3.repository.RefreshTokenRepository;
@@ -39,6 +40,12 @@ class AuthServiceTest {
     @Mock
     private JwtUtil jwtUtil;
 
+    @Mock
+    private RecoveryEmailService recoveryEmailService;
+
+    @Mock
+    private RecoveryRateLimitService recoveryRateLimitService;
+
     @InjectMocks
     private AuthService authService;
 
@@ -46,16 +53,43 @@ class AuthServiceTest {
     void register_createsUserWhenAvailable() {
         when(userRepository.findByUsername("alice")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("secret")).thenReturn("hashed");
+        when(passwordEncoder.encode(org.mockito.ArgumentMatchers.startsWith("TOY-"))).thenReturn("hashed-recovery");
 
         LoginRequest request = new LoginRequest();
         request.setUsername("alice");
         request.setPassword("secret");
-        authService.register(request);
+        var response = authService.register(request);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
         assertThat(captor.getValue().getUsername()).isEqualTo("alice");
         assertThat(captor.getValue().getPasswordHash()).isEqualTo("hashed");
+        assertThat(captor.getValue().getRecoveryCodeHash()).isEqualTo("hashed-recovery");
+        assertThat(response.getRecoveryCode()).startsWith("TOY-");
+        assertThat(response.isRecoveryEmailSent()).isFalse();
+    }
+
+    @Test
+    void register_sendsRecoveryCodeWhenEmailProvided() {
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("secret")).thenReturn("hashed");
+        when(passwordEncoder.encode(org.mockito.ArgumentMatchers.startsWith("TOY-"))).thenReturn("hashed-recovery");
+        when(recoveryEmailService.hasEmail("alice@example.test")).thenReturn(true);
+
+        LoginRequest request = new LoginRequest();
+        request.setUsername("alice");
+        request.setPassword("secret");
+        request.setRecoveryEmail("alice@example.test");
+
+        var response = authService.register(request);
+
+        verify(recoveryRateLimitService).check("register-email:alice");
+        verify(recoveryEmailService).sendRecoveryCode(
+                org.mockito.ArgumentMatchers.eq("alice@example.test"),
+                org.mockito.ArgumentMatchers.eq("alice"),
+                org.mockito.ArgumentMatchers.startsWith("TOY-"));
+        assertThat(response.getRecoveryCode()).isNull();
+        assertThat(response.isRecoveryEmailSent()).isTrue();
     }
 
     @Test
@@ -147,5 +181,68 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.changePassword("alice", "wrong-secret", "new-secret"))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Current password is invalid");
+    }
+
+    @Test
+    void rotateRecoveryCode_requiresCurrentPasswordAndStoresNewHash() {
+        User user = new User("alice", "old-hash");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("old-secret", "old-hash")).thenReturn(true);
+        when(passwordEncoder.encode(org.mockito.ArgumentMatchers.startsWith("TOY-"))).thenReturn("new-recovery-hash");
+
+        var response = authService.rotateRecoveryCode("alice", "old-secret", null);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getRecoveryCodeHash()).isEqualTo("new-recovery-hash");
+        assertThat(response.getRecoveryCode()).startsWith("TOY-");
+    }
+
+    @Test
+    void recoverPassword_updatesPasswordRevokesTokensAndRotatesRecoveryCode() {
+        User user = new User("alice", "old-hash");
+        user.setId("u1");
+        user.setRecoveryCodeHash("recovery-hash");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("TOY-AAAAA-BBBBB-CCCCC-DDDDD", "recovery-hash")).thenReturn(true);
+        when(passwordEncoder.matches("new-secret", "old-hash")).thenReturn(false);
+        when(passwordEncoder.encode("new-secret")).thenReturn("new-password-hash");
+        when(passwordEncoder.encode(org.mockito.ArgumentMatchers.startsWith("TOY-"))).thenReturn("next-recovery-hash");
+        RefreshToken token = new RefreshToken("u1", "refresh-hash", java.time.Instant.now().plusSeconds(60));
+        when(refreshTokenRepository.findByUserIdAndRevokedFalse("u1")).thenReturn(List.of(token));
+
+        RecoverPasswordRequest request = new RecoverPasswordRequest();
+        request.setUsername("alice");
+        request.setRecoveryCode("TOY-AAAAA-BBBBB-CCCCC-DDDDD");
+        request.setNewPassword("new-secret");
+        request.setConfirmPassword("new-secret");
+
+        var response = authService.recoverPassword(request);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getPasswordHash()).isEqualTo("new-password-hash");
+        assertThat(captor.getValue().getRecoveryCodeHash()).isEqualTo("next-recovery-hash");
+        assertThat(token.isRevoked()).isTrue();
+        verify(refreshTokenRepository).save(token);
+        assertThat(response.getRecoveryCode()).startsWith("TOY-");
+    }
+
+    @Test
+    void recoverPassword_throwsWhenRecoveryCodeInvalid() {
+        User user = new User("alice", "old-hash");
+        user.setRecoveryCodeHash("recovery-hash");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("bad-code", "recovery-hash")).thenReturn(false);
+
+        RecoverPasswordRequest request = new RecoverPasswordRequest();
+        request.setUsername("alice");
+        request.setRecoveryCode("bad-code");
+        request.setNewPassword("new-secret");
+        request.setConfirmPassword("new-secret");
+
+        assertThatThrownBy(() -> authService.recoverPassword(request))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Invalid recovery code");
     }
 }

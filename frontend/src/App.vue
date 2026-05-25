@@ -63,21 +63,74 @@
 
     <main>
       <section id="auth-section" v-if="currentView === 'auth'">
-        <div class="card" style="max-width: 400px; margin: 0 auto;">
+        <div v-if="!isRecoveryMode" class="card" style="max-width: 400px; margin: 0 auto;">
           <h2>Welcome Back</h2>
           <p style="color: var(--text-light); margin-bottom: 20px;">Connect with your loved ones.</p>
           <input v-model.trim="authUsername" type="text" placeholder="Username" />
           <input v-model.trim="authPassword" type="password" placeholder="Password" />
-          <input v-model.trim="authPasswordConfirmation" type="password" placeholder="Repeat password for registration" />
-          <div class="button-group" style="margin-top: 20px;">
+          <template v-if="!isRegistrationRecoveryStep">
+            <input v-model.trim="authPasswordConfirmation" type="password" placeholder="Repeat password for registration" />
+          </template>
+          <template v-else>
+            <div style="margin-top: 14px; padding: 12px; border-radius: 10px; background: rgba(102, 126, 234, 0.1); text-align: left;">
+              <strong>Recovery code delivery</strong>
+              <p style="color: var(--text-light); margin-top: 6px;">
+                Add an email only if you want the recovery code sent there. The email address is not stored.
+              </p>
+              <input v-model.trim="authRecoveryEmail" type="email" placeholder="Optional email for recovery code" />
+            </div>
+          </template>
+          <div
+            v-if="registrationRecoveryCode || registrationRecoveryEmailSent"
+            style="margin-top: 14px; padding: 12px; border-radius: 10px; background: rgba(102, 126, 234, 0.1); text-align: left;"
+          >
+            <strong>Recovery code</strong>
+            <p v-if="registrationRecoveryEmailSent" style="color: var(--text-light); margin-top: 6px;">
+              Your recovery code was sent. The email address was not stored.
+            </p>
+            <p v-else style="color: var(--text-light); margin-top: 6px;">
+              Save this code. It is required if you forget your password.
+            </p>
+            <code v-if="registrationRecoveryCode" style="display: block; margin-top: 8px; overflow-wrap: anywhere;">
+              {{ registrationRecoveryCode }}
+            </code>
+          </div>
+          <div v-if="!isRegistrationRecoveryStep" class="button-group" style="margin-top: 20px;">
             <button style="flex: 2" :disabled="isAuthBusy" @click="login">Login</button>
             <button class="secondary-btn" style="flex: 1" :disabled="isAuthBusy" @click="register">Register</button>
           </div>
+          <div v-else class="button-group" style="margin-top: 20px;">
+            <button style="flex: 2" :disabled="isAuthBusy" @click="register">Create account</button>
+            <button class="secondary-btn" style="flex: 1" :disabled="isAuthBusy" @click="backToRegistrationCredentials">Back</button>
+          </div>
+          <button v-if="!isRegistrationRecoveryStep" class="secondary-btn" style="width: 100%; margin-top: 12px;" @click="showRecoveryMode">
+            Forgot password?
+          </button>
           <p style="color: var(--text-light); margin-top: 16px; font-size: 14px;">
             <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
             ·
             <a href="/account-deletion.html" target="_blank" rel="noopener noreferrer">Account deletion info</a>
           </p>
+        </div>
+        <div v-else class="card" style="max-width: 400px; margin: 0 auto;">
+          <h2>Recover Password</h2>
+          <p style="color: var(--text-light); margin-bottom: 20px;">Use your saved recovery code to set a new password.</p>
+          <input v-model.trim="recoverUsername" type="text" placeholder="Username" />
+          <input v-model.trim="recoverCode" type="text" placeholder="Recovery code" />
+          <input v-model="recoverNewPassword" type="password" placeholder="New password" />
+          <input v-model="recoverConfirmPassword" type="password" placeholder="Repeat new password" />
+          <div
+            v-if="recoveryResetCode"
+            style="margin-top: 14px; padding: 12px; border-radius: 10px; background: rgba(102, 126, 234, 0.1); text-align: left;"
+          >
+            <strong>New recovery code</strong>
+            <p style="color: var(--text-light); margin-top: 6px;">Your old recovery code was used and replaced. Save this new one.</p>
+            <code style="display: block; margin-top: 8px; overflow-wrap: anywhere;">{{ recoveryResetCode }}</code>
+          </div>
+          <div class="button-group" style="margin-top: 20px;">
+            <button style="flex: 2" :disabled="isRecoverBusy" @click="recoverPassword">Reset password</button>
+            <button class="secondary-btn" style="flex: 1" :disabled="isRecoverBusy" @click="showLoginMode">Back</button>
+          </div>
         </div>
       </section>
 
@@ -426,6 +479,30 @@
             <button :disabled="isPasswordBusy" @click="changePassword">Update password</button>
           </div>
           <div style="margin-top: 20px;">
+            <h3 style="margin-bottom: 8px;">Account recovery</h3>
+            <p style="color: var(--text-light); margin-bottom: 12px;">
+              Generate a new recovery code. The previous recovery code stops working.
+            </p>
+            <input v-model="profileRecoveryPassword" type="password" placeholder="Current password for recovery code" />
+            <input v-model.trim="profileRecoveryEmail" type="email" placeholder="Optional email for new recovery code" />
+            <div
+              v-if="profileRecoveryCode || profileRecoveryEmailSent"
+              style="margin-top: 12px; padding: 12px; border-radius: 10px; background: rgba(102, 126, 234, 0.1); text-align: left;"
+            >
+              <strong>Recovery code</strong>
+              <p v-if="profileRecoveryEmailSent" style="color: var(--text-light); margin-top: 6px;">
+                Your new recovery code was sent. The email address was not stored.
+              </p>
+              <p v-else style="color: var(--text-light); margin-top: 6px;">Save this new code.</p>
+              <code v-if="profileRecoveryCode" style="display: block; margin-top: 8px; overflow-wrap: anywhere;">
+                {{ profileRecoveryCode }}
+              </code>
+            </div>
+            <div class="button-group" style="margin-top: 12px;">
+              <button :disabled="isRecoveryCodeBusy" @click="rotateRecoveryCode">Generate recovery code</button>
+            </div>
+          </div>
+          <div style="margin-top: 20px;">
             <h3 style="margin-bottom: 8px;">Dashboard event display</h3>
             <p style="color: var(--text-light); margin-bottom: 12px;">
               Choose whether dashboard cards show total counts or only the latest event date/time + emoji.
@@ -641,7 +718,18 @@ const isMenuOpen = ref(false);
 const authUsername = ref('');
 const authPassword = ref('');
 const authPasswordConfirmation = ref('');
+const authRecoveryEmail = ref('');
 const isAuthBusy = ref(false);
+const isRecoveryMode = ref(false);
+const isRegistrationRecoveryStep = ref(false);
+const registrationRecoveryCode = ref('');
+const registrationRecoveryEmailSent = ref(false);
+const recoverUsername = ref('');
+const recoverCode = ref('');
+const recoverNewPassword = ref('');
+const recoverConfirmPassword = ref('');
+const recoveryResetCode = ref('');
+const isRecoverBusy = ref(false);
 
 const partners = ref<ConnectionDTO[]>([]);
 const pendingRequests = ref<ConnectionDTO[]>([]);
@@ -658,6 +746,11 @@ const profileCurrentPassword = ref('');
 const profileNewPassword = ref('');
 const profileConfirmPassword = ref('');
 const isPasswordBusy = ref(false);
+const profileRecoveryPassword = ref('');
+const profileRecoveryEmail = ref('');
+const profileRecoveryCode = ref('');
+const profileRecoveryEmailSent = ref(false);
+const isRecoveryCodeBusy = ref(false);
 const deleteAccountPassword = ref('');
 const deleteAccountConfirmation = ref('');
 const isDeleteAccountBusy = ref(false);
@@ -1051,34 +1144,119 @@ async function login() {
 }
 
 async function register() {
-  if (!authUsername.value || !authPassword.value || !authPasswordConfirmation.value) {
-    showToast('Please enter username, password, and repeated password.', 'error');
-    return;
-  }
+  if (!isRegistrationRecoveryStep.value) {
+    if (!authUsername.value || !authPassword.value || !authPasswordConfirmation.value) {
+      showToast('Please enter username, password, and repeated password.', 'error');
+      return;
+    }
 
-  if (authPassword.value !== authPasswordConfirmation.value) {
-    showToast('Passwords do not match.', 'error');
+    if (authPassword.value !== authPasswordConfirmation.value) {
+      showToast('Passwords do not match.', 'error');
+      return;
+    }
+
+    registrationRecoveryCode.value = '';
+    registrationRecoveryEmailSent.value = false;
+    isRegistrationRecoveryStep.value = true;
     return;
   }
 
   isAuthBusy.value = true;
   try {
+    registrationRecoveryCode.value = '';
+    registrationRecoveryEmailSent.value = false;
     const res = await fetch(toApiUrl('/api/auth/register'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: authUsername.value, password: authPassword.value })
+      body: JSON.stringify({
+        username: authUsername.value,
+        password: authPassword.value,
+        recoveryEmail: authRecoveryEmail.value || undefined
+      })
     });
 
     if (res.ok) {
+      const data = (await res.json().catch(() => null)) as RecoveryCodeResponse | null;
+      registrationRecoveryCode.value = data?.recoveryCode ?? '';
+      registrationRecoveryEmailSent.value = Boolean(data?.recoveryEmailSent);
+      authRecoveryEmail.value = '';
+      isRegistrationRecoveryStep.value = false;
       showToast('Registered successfully! You can now login.', 'success');
     } else {
-      showToast('Registration failed. Username might be taken.', 'error');
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      showToast(body?.error ?? 'Registration failed. Username might be taken.', 'error');
     }
   } catch (error) {
     console.error(error);
     showToast('Connection error', 'error');
   } finally {
     isAuthBusy.value = false;
+  }
+}
+
+function backToRegistrationCredentials() {
+  isRegistrationRecoveryStep.value = false;
+  authRecoveryEmail.value = '';
+}
+
+function showRecoveryMode() {
+  recoverUsername.value = authUsername.value;
+  recoverCode.value = '';
+  recoverNewPassword.value = '';
+  recoverConfirmPassword.value = '';
+  recoveryResetCode.value = '';
+  isRegistrationRecoveryStep.value = false;
+  isRecoveryMode.value = true;
+}
+
+function showLoginMode() {
+  isRecoveryMode.value = false;
+}
+
+async function recoverPassword() {
+  if (!recoverUsername.value || !recoverCode.value || !recoverNewPassword.value || !recoverConfirmPassword.value) {
+    showToast('Please fill in all recovery fields.', 'error');
+    return;
+  }
+  if (recoverNewPassword.value !== recoverConfirmPassword.value) {
+    showToast('New password and confirmation do not match.', 'error');
+    return;
+  }
+
+  isRecoverBusy.value = true;
+  try {
+    recoveryResetCode.value = '';
+    const res = await fetch(toApiUrl('/api/auth/recover-password'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: recoverUsername.value,
+        recoveryCode: recoverCode.value,
+        newPassword: recoverNewPassword.value,
+        confirmPassword: recoverConfirmPassword.value
+      })
+    });
+
+    if (res.ok) {
+      const data = (await res.json()) as RecoveryCodeResponse;
+      recoveryResetCode.value = data.recoveryCode ?? '';
+      authUsername.value = recoverUsername.value;
+      authPassword.value = '';
+      authPasswordConfirmation.value = '';
+      recoverCode.value = '';
+      recoverNewPassword.value = '';
+      recoverConfirmPassword.value = '';
+      showToast('Password reset successfully. Save your new recovery code.', 'success');
+      return;
+    }
+
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    showToast(body?.error ?? 'Failed to reset password.', 'error');
+  } catch (error) {
+    console.error(error);
+    showToast('Connection error', 'error');
+  } finally {
+    isRecoverBusy.value = false;
   }
 }
 
@@ -1095,6 +1273,12 @@ function logout(callServer = true) {
   token.value = '';
   refreshToken.value = '';
   currentUsername.value = '';
+  isRecoveryMode.value = false;
+  isRegistrationRecoveryStep.value = false;
+  registrationRecoveryCode.value = '';
+  registrationRecoveryEmailSent.value = false;
+  authRecoveryEmail.value = '';
+  recoveryResetCode.value = '';
   disconnectWebSocket();
   pushInitialized = false;
   refreshInFlight = null;
@@ -1109,6 +1293,10 @@ function logout(callServer = true) {
   profileCurrentPassword.value = '';
   profileNewPassword.value = '';
   profileConfirmPassword.value = '';
+  profileRecoveryPassword.value = '';
+  profileRecoveryEmail.value = '';
+  profileRecoveryCode.value = '';
+  profileRecoveryEmailSent.value = false;
   deleteAccountPassword.value = '';
   deleteAccountConfirmation.value = '';
   moodCatalog.value = [...DEFAULT_MOOD_CATALOG];
@@ -1158,6 +1346,42 @@ async function changePassword() {
     showToast(body?.error ?? 'Failed to update password.', 'error');
   } finally {
     isPasswordBusy.value = false;
+  }
+}
+
+async function rotateRecoveryCode() {
+  if (!profileRecoveryPassword.value) {
+    showToast('Please enter your current password to generate a recovery code.', 'error');
+    return;
+  }
+
+  isRecoveryCodeBusy.value = true;
+  try {
+    profileRecoveryCode.value = '';
+    profileRecoveryEmailSent.value = false;
+    const res = await apiFetch('/api/users/recovery-code', {
+      method: 'POST',
+      body: JSON.stringify({
+        currentPassword: profileRecoveryPassword.value,
+        recoveryEmail: profileRecoveryEmail.value || undefined
+      })
+    });
+    if (!res) return;
+
+    if (res.ok) {
+      const data = (await res.json()) as RecoveryCodeResponse;
+      profileRecoveryCode.value = data.recoveryCode ?? '';
+      profileRecoveryEmailSent.value = Boolean(data.recoveryEmailSent);
+      profileRecoveryPassword.value = '';
+      profileRecoveryEmail.value = '';
+      showToast('Recovery code generated.', 'success');
+      return;
+    }
+
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    showToast(body?.error ?? 'Failed to generate recovery code.', 'error');
+  } finally {
+    isRecoveryCodeBusy.value = false;
   }
 }
 
@@ -1959,6 +2183,11 @@ interface AuthResponse {
   token: string;
   username: string;
   refreshToken?: string;
+}
+
+interface RecoveryCodeResponse {
+  recoveryCode?: string | null;
+  recoveryEmailSent: boolean;
 }
 
 interface ConnectionDTO {

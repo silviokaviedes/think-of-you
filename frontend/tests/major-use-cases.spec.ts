@@ -46,6 +46,7 @@ test('User can register and login', async ({ page }) => {
   const username = uniqueUser('user');
 
   await page.goto('/');
+  await expect(page.getByPlaceholder('Optional email for recovery code')).toHaveCount(0);
   await page.getByPlaceholder('Username').fill(username);
   await page.getByPlaceholder('Password', { exact: true }).fill(password);
   await page.getByPlaceholder('Repeat password for registration').fill(`${password}x`);
@@ -54,12 +55,54 @@ test('User can register and login', async ({ page }) => {
 
   await page.getByPlaceholder('Repeat password for registration').fill(password);
   await page.getByRole('button', { name: 'Register' }).click();
+  await expect(page.locator('#auth-section')).toContainText('Recovery code delivery');
+  await expect(page.getByPlaceholder('Optional email for recovery code')).toBeVisible();
+  await page.getByRole('button', { name: 'Create account' }).click();
   await expect(page.locator('#toast-container')).toContainText('Registered successfully');
+  await expect(page.locator('#auth-section')).toContainText('Recovery code');
+  await expect(page.locator('#auth-section code')).toContainText('TOY-');
 
   await page.getByRole('button', { name: 'Login' }).click();
   await expect(page.locator('#toast-container')).toContainText('Welcome back');
   await expect(page.locator('#dashboard-section')).toBeVisible();
   await expect(page.locator('#dashboard-section')).toContainText('My People');
+});
+
+test('User can reset password with recovery code', async ({ page }) => {
+  const username = uniqueUser('recover-user');
+  const oldPassword = 'Passw0rd!';
+  const newPassword = 'RecoveredPassw0rd!';
+
+  await page.goto('/');
+  await page.getByPlaceholder('Username').fill(username);
+  await page.getByPlaceholder('Password', { exact: true }).fill(oldPassword);
+  await page.getByPlaceholder('Repeat password for registration').fill(oldPassword);
+  await page.getByRole('button', { name: 'Register' }).click();
+  await page.getByRole('button', { name: 'Create account' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Registered successfully');
+  const recoveryCode = (await page.locator('#auth-section code').innerText()).trim();
+  expect(recoveryCode).toContain('TOY-');
+
+  await page.getByRole('button', { name: 'Forgot password?' }).click();
+  await expect(page.locator('#auth-section')).toContainText('Recover Password');
+  await page.getByPlaceholder('Username').fill(username);
+  await page.getByPlaceholder('Recovery code').fill(recoveryCode);
+  await page.getByPlaceholder('New password', { exact: true }).fill(newPassword);
+  await page.getByPlaceholder('Repeat new password').fill(newPassword);
+  await page.getByRole('button', { name: 'Reset password' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Password reset successfully');
+  await expect(page.locator('#auth-section')).toContainText('New recovery code');
+  await expect(page.locator('#auth-section code')).toContainText('TOY-');
+
+  await page.getByRole('button', { name: 'Back' }).click();
+  await page.getByPlaceholder('Username').fill(username);
+  await page.getByPlaceholder('Password', { exact: true }).fill(oldPassword);
+  await page.getByRole('button', { name: 'Login' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Login failed');
+
+  await page.getByPlaceholder('Password', { exact: true }).fill(newPassword);
+  await page.getByRole('button', { name: 'Login' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Welcome back');
 });
 
 test('Logged out user can open News tab', async ({ page }) => {
@@ -206,9 +249,9 @@ test('User can send current energy levels with a mood', async ({ page, request, 
   await loginViaStorage(page, senderAuth.token, senderAuth.username);
   await page.getByRole('button', { name: 'Show body energy description' }).click();
   await expect(page.locator('#dashboard-section')).toContainText('Physical strength, rest, and body tension right now.');
-  await setRangeValue(page.getByLabel('Body energy'), 22);
-  await setRangeValue(page.getByLabel('Mind energy'), 63);
-  await setRangeValue(page.getByLabel('Heart energy'), 88);
+  await setRangeValue(page.getByRole('slider', { name: 'Body energy' }), 22);
+  await setRangeValue(page.getByRole('slider', { name: 'Mind energy' }), 63);
+  await setRangeValue(page.getByRole('slider', { name: 'Heart energy' }), 88);
 
   const senderPartnerCard = page.locator('.partner-card').filter({ hasText: receiver });
   await expect(senderPartnerCard).toBeVisible();
@@ -295,6 +338,7 @@ test('User can change password from profile', async ({ page }) => {
   await page.getByPlaceholder('Password', { exact: true }).fill(oldPassword);
   await page.getByPlaceholder('Repeat password for registration').fill(oldPassword);
   await page.getByRole('button', { name: 'Register' }).click();
+  await page.getByRole('button', { name: 'Create account' }).click();
   await expect(page.locator('#toast-container')).toContainText('Registered successfully');
 
   await page.getByRole('button', { name: 'Login' }).click();
@@ -304,6 +348,11 @@ test('User can change password from profile', async ({ page }) => {
   await expect(page.locator('#profile-section')).toBeVisible();
 
   const profileSection = page.locator('#profile-section');
+  await profileSection.getByPlaceholder('Current password for recovery code').fill(oldPassword);
+  await page.getByRole('button', { name: 'Generate recovery code' }).click();
+  await expect(page.locator('#toast-container')).toContainText('Recovery code generated');
+  await expect(profileSection).toContainText('TOY-');
+
   await profileSection.getByPlaceholder('Current password', { exact: true }).fill(oldPassword);
   await profileSection.getByPlaceholder('New password', { exact: true }).fill(newPassword);
   await profileSection.getByPlaceholder('Confirm new password').fill(newPassword);

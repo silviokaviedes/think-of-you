@@ -4,6 +4,7 @@ import de.kaviedes.thinkofyou3.dto.ChangePasswordRequest;
 import de.kaviedes.thinkofyou3.dto.DashboardPreferenceDTO;
 import de.kaviedes.thinkofyou3.dto.DeleteAccountRequest;
 import de.kaviedes.thinkofyou3.dto.EnergyLevelsDTO;
+import de.kaviedes.thinkofyou3.dto.RotateRecoveryCodeRequest;
 import de.kaviedes.thinkofyou3.dto.UpdateFavoriteMoodsRequest;
 import de.kaviedes.thinkofyou3.dto.UpdateDashboardPreferenceRequest;
 import de.kaviedes.thinkofyou3.dto.UserMoodPreferencesDTO;
@@ -48,6 +49,20 @@ public class UserController {
         try {
             authService.changePassword(auth.getName(), request.getCurrentPassword(), request.getNewPassword());
             return ResponseEntity.ok().build();
+        } catch (RuntimeException ex) {
+            Map<String, String> body = new HashMap<>();
+            body.put("error", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        }
+    }
+
+    @PostMapping("/recovery-code")
+    public ResponseEntity<?> rotateRecoveryCode(@RequestBody RotateRecoveryCodeRequest request, Authentication auth) {
+        try {
+            return ResponseEntity.ok(authService.rotateRecoveryCode(
+                    auth.getName(),
+                    request.getCurrentPassword(),
+                    request.getRecoveryEmail()));
         } catch (RuntimeException ex) {
             Map<String, String> body = new HashMap<>();
             body.put("error", ex.getMessage());
