@@ -12,6 +12,8 @@ services:
     container_name: think-of-you-app
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     environment:
       - MONGO_HOST=mongodb
     depends_on:
