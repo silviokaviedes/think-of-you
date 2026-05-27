@@ -9,6 +9,7 @@ This file is a working checklist for completing the Google Play Data Safety form
 - Google Play requires the Data Safety form for published apps.
 - Google Play requires a public privacy policy URL.
 - Because this app lets users create an account, Google Play also requires an account deletion path in the app and outside the app.
+- For Social/Dating-scope declarations, Google Play also asks for externally published standards against child sexual abuse and exploitation (CSAE).
 - Play Console answers must cover the full shipped app, including any third-party SDK behavior.
 
 ## Current Implementation Summary
@@ -65,11 +66,13 @@ Yes, in the current implementation:
 - The app exposes a self-service account deletion flow in the Profile screen.
 - A public `account-deletion.html` page exists for out-of-app deletion guidance.
 - A static `privacy-policy.html` page exists for hosting the privacy policy with the app.
+- A static `child-safety-standards.html` page exists for externally published CSAE/child safety standards.
 
 Publication values:
 
 - Privacy policy URL: `https://think-of-you-production.up.railway.app/privacy-policy.html`
 - Account deletion URL: `https://think-of-you-production.up.railway.app/account-deletion.html`
+- Child safety standards URL: `https://think-of-you-production.up.railway.app/child-safety-standards.html`
 - Privacy/support contact: `thinkingofyou@kaviedes.de`
 
 ## Draft Console Worksheet
@@ -92,5 +95,6 @@ Confirm all of the following:
 - The policy matches the shipped app behavior
 - Firebase behavior is reflected correctly
 - Account deletion flow exists both in-app and outside the app
+- Child safety standards page is hosted on a public URL and references Thinking of You plus CSAE/CSAM handling
 - Placeholder contact/support details have been replaced with real public information
 - Play Console answers are reviewed against the latest Google guidance at submission time

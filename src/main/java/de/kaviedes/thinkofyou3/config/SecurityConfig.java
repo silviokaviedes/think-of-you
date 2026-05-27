@@ -36,6 +36,7 @@ public class SecurityConfig {
                                 "/index.html",
                                 "/privacy-policy.html",
                                 "/account-deletion.html",
+                                "/child-safety-standards.html",
                                 "/css/**",
                                 "/js/**",
                                 "/",

@@ -44,6 +44,10 @@ class SecurityConfigTest {
         mockMvc.perform(get("/account-deletion.html"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Thinking of You Account Deletion")));
+
+        mockMvc.perform(get("/child-safety-standards.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Thinking of You Child Safety Standards")));
     }
 
     @Test
@@ -57,13 +61,19 @@ class SecurityConfigTest {
         @GetMapping("/privacy-policy.html")
         @ResponseBody
         String privacyPolicy() {
-            return "privacy";
+            return "Privacy Policy for Thinking of You";
         }
 
         @GetMapping("/account-deletion.html")
         @ResponseBody
         String accountDeletion() {
-            return "deletion";
+            return "Thinking of You Account Deletion";
+        }
+
+        @GetMapping("/child-safety-standards.html")
+        @ResponseBody
+        String childSafetyStandards() {
+            return "Thinking of You Child Safety Standards";
         }
 
         @GetMapping("/private")

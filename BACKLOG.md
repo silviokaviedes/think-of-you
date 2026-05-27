@@ -53,4 +53,4 @@ When a user sends an emoji, the app also sends a snapshot of the current energy 
 - [x] Display the user's latest sent energy levels in the dashboard where sent last-event details are shown.
 - [x] Add backend tests for defaults, validation, event snapshots, connection DTO mapping, and backwards-compatible request handling.
 - [x] Add frontend or Playwright coverage for setting energy levels, sending an emoji, and seeing the received energy levels in the other user's dashboard.
-- [ ] Manually verify the dashboard layout on desktop and Android WebView so sliders and compact energy labels do not overlap existing content.
+- [x] Manually verify the dashboard layout on desktop and Android WebView so sliders and compact energy labels do not overlap existing content.

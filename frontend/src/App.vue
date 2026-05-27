@@ -110,6 +110,8 @@
             <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
             ·
             <a href="/account-deletion.html" target="_blank" rel="noopener noreferrer">Account deletion info</a>
+            ·
+            <a href="/child-safety-standards.html" target="_blank" rel="noopener noreferrer">Child safety standards</a>
           </p>
         </div>
         <div v-else class="card" style="max-width: 400px; margin: 0 auto;">
@@ -573,6 +575,8 @@
               <a href="/account-deletion.html" target="_blank" rel="noopener noreferrer">account deletion page</a>
               and
               <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer">privacy policy</a>
+              and
+              <a href="/child-safety-standards.html" target="_blank" rel="noopener noreferrer">child safety standards</a>
             </p>
           </div>
         </div>

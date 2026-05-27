@@ -31,6 +31,7 @@ The app does not include ads or third-party analytics in the current implementat
 
 - Privacy policy URL: `https://think-of-you-production.up.railway.app/privacy-policy.html`
 - Account deletion URL: `https://think-of-you-production.up.railway.app/account-deletion.html`
+- Child safety standards URL: `https://think-of-you-production.up.railway.app/child-safety-standards.html`
 - Support URL: `https://think-of-you-production.up.railway.app/`
 - Contact email: `thinkingofyou@kaviedes.de`
 
